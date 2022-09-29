@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <!-- Import style -->
+  <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" />
+  <!-- Import Vue 3 -->
+  <script src="//unpkg.com/vue@3"></script>
+  <!-- Import component library -->
+  <script src="//unpkg.com/element-plus"></script>
+  <script src="//unpkg.com/@element-plus/icons-vue"></script>
+</head>
+<body>
+  <div id="app">
+    <el-header>
+      <el-button @click="onAddProject">新增</el-button>
+    </el-header>
+
+    <el-main>
+      <el-table border :data="projectList">
+        <el-table-column label="项目标识" prop="name"></el-table-column>
+        <el-table-column label="url前缀" prop="urlPrefix"></el-table-column>
+        <el-table-column label="代理目标host" prop="proxyHost"></el-table-column>
+        <el-table-column label="本地项目" prop="isLocal" :width="90" align="center">
+          <template #default="{ row }">
+            <el-checkbox v-model="row.isLocal" disabled />
+          </template>
+        </el-table-column>
+        <el-table-column label="node执行文件" prop="script"></el-table-column>
+        <el-table-column label="项目所在路径" prop="dir" :min-width="150"></el-table-column>
+        <el-table-column label="运行" :width="70" align="center">
+          <template #default="{ row }">
+            <el-switch v-model="row.isStart" disabled />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作">
+          <template #default="{ row }">
+            <el-button v-if="!row.isStart" @click="removeProject(row)">删除</el-button>
+            <el-button v-if="!row.isStart" @click="startProject(row)">启动</el-button>
+            <el-button v-if="row.isStart" @click="stopProject(row)">停止</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-main>
+
+    <el-dialog v-model="showAddDialog" title="新增" :close-on-click-modal="false" :width="480">
+      <el-dropdown @command="setDefaultProject">
+        <el-button class="el-dropdown-link">默认项目</el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item v-for="project in defaultProject" :key="project.name" :command="project.name">
+                {{ project.name }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+
+      <el-form ref="newProjectForm" :model="newProject" label-width="120px">
+        <el-form-item label="项目标识" prop="name" required>
+          <el-input v-model="newProject.name" />
+        </el-form-item>
+
+        <el-form-item label="url前缀" prop="urlPrefix" required>
+          <el-input v-model="newProject.urlPrefix" />
+        </el-form-item>
+
+        <el-form-item label="代理目标host" prop="proxyHost" required>
+          <el-input v-model="newProject.proxyHost" />
+        </el-form-item>
+
+        <el-form-item label="是否本地项目" prop="isLocal" required>
+          <el-checkbox v-model="newProject.isLocal" />
+        </el-form-item>
+
+        <template v-if="newProject.isLocal">
+          <el-form-item label="node执行文件" prop="script" required>
+            <el-input v-model="newProject.script" />
+          </el-form-item>
+
+          <el-form-item label="项目目录" prop="dir" required>
+            <el-input v-model="newProject.dir"/>
+          </el-form-item>
+        </template>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="cancelAddProject">取消</el-button>
+        <el-button type="primary" @click="submitAddProject">新增</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <script src="./dashboard.js"></script>
+</body>
+</html>
