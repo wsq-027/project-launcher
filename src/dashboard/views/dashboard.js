@@ -57,8 +57,23 @@ const DEFAULT_PROJECT = [
   },
 ]
 
+function gradient(p, rgb_beginning, rgb_end) {
+
+  var w = (p / 100) * 2 - 1;
+
+  var w1 = (w + 1) / 2.0;
+  var w2 = 1 - w1;
+
+  var rgb = [parseInt(rgb_beginning[0] * w1 + rgb_end[0] * w2),
+      parseInt(rgb_beginning[1] * w1 + rgb_end[1] * w2),
+          parseInt(rgb_beginning[2] * w1 + rgb_end[2] * w2)];
+
+  return "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
+}
+
 const app = createApp({
   setup() {
+    /** 初始化 */
     const projectList = ref([])
 
     async function getProjectList() {
@@ -69,10 +84,10 @@ const app = createApp({
 
     onMounted(getProjectList)
 
-    /***/
+    /** 新增弹窗 */
 
-    const showAddDialog = ref(false)
-    const newProject = reactive({
+    const newProjectVisible = ref(false)
+    const newProject = ref({
       name: '',
       script: '',
       dir: '',
@@ -84,11 +99,11 @@ const app = createApp({
     const newProjectForm = ref()
 
     function onAddProject() {
-      showAddDialog.value = true
+      newProjectVisible.value = true
     }
 
     function cancelAddProject(){
-      showAddDialog.value = false
+      newProjectVisible.value = false
     }
 
     async function submitAddProject(){
@@ -98,7 +113,7 @@ const app = createApp({
 
       await api('/dashboard/project', {
         method: 'PUT',
-        data: newProject
+        data: newProject.value
       })
 
       message.success('添加项目成功')
@@ -114,13 +129,10 @@ const app = createApp({
         return
       }
 
-      newProject.name = project.name
-      newProject.script = project.script
-      newProject.dir = project.dir
-      newProject.urlPrefix = project.urlPrefix
-      newProject.proxyHost = project.proxyHost
-      newProject.isLocal = project.isLocal
+      newProject.value = project
     }
+
+    /** 列表操作 */
 
     async function startProject(project) {
       await api('/dashboard/project/start', {
@@ -155,9 +167,30 @@ const app = createApp({
       await getProjectList()
     }
 
+    /** 详情弹窗 */
+
+    const progressDetail = ref({})
+    const progressDetailVisible = ref(false)
+
+    function showProgressDetail(project) {
+      progressDetailVisible.value = true
+      const interval = async () => {
+        progressDetail.value = await api('/dashboard/project', {
+          method: 'GET',
+          params: { name: project.name }
+        })
+
+        if (progressDetailVisible.value) {
+          setTimeout(interval, 3000)
+        }
+      }
+
+      interval()
+    }
+
     return {
       projectList,
-      showAddDialog,
+      newProjectVisible,
       newProject,
       newProjectForm,
       onAddProject,
@@ -168,6 +201,10 @@ const app = createApp({
       startProject,
       stopProject,
       removeProject,
+      progressDetail,
+      progressDetailVisible,
+      showProgressDetail,
+      gradient,
     }
   }
 })

@@ -56,7 +56,7 @@ async function stopProject({name}) {
   store.update(name, project)
 }
 
-function removeProject({name}) {
+async function removeProject({name}) {
   const project = store.get(name)
 
   if (project.isStart) {
@@ -67,24 +67,20 @@ function removeProject({name}) {
 }
 
 async function listProject() {
-  const hasProgress = store.exist((proj) => proj.isLocal && proj.isStart)
-  const progressList = hasProgress ? await pm.listProgress() : []
-  const list = []
+  return [...store]
+}
 
-  for (const project of store) {
-    if (project.isLocal && project.isStart) {
-      const progress = hasProgress ? progressList.find((prog) => prog.name === project.name) : {}
+async function detailProject({ name }) {
+  const project = store.get(name)
 
-      list.push({
-        ...project,
-        ...progress,
-      })
-    } else {
-      list.push(project)
-    }
+  if (!project.isStart) {
+    throw new Error('项目未启动')
   }
 
-  return list
+  return {
+    ...project,
+    ...(await pm.detailProgress(name)),
+  }
 }
 
 async function exit() {
@@ -106,4 +102,5 @@ module.exports = {
   stopProject,
   removeProject,
   listProject,
+  detailProject,
 }
