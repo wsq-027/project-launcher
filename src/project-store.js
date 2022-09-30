@@ -1,5 +1,26 @@
+const Storage = require('node-storage')
+
+function omit(obj, key) {
+  const result = {}
+
+  for (const name in obj) {
+    if (name !== key) {
+      result[name] = obj[name]
+    }
+  }
+
+  return result
+}
+
 class ProjectStore {
-  map = new Map
+  constructor() {
+    this.storage = new Storage('./.projects-storage.json')
+    this.map = new Map
+
+    for (const name in this.storage.store) {
+      this.map.set(name, { ...this.storage.store[name], isStart: false })
+    }
+  }
 
   add(project) {
     if (this.has(project.name)) {
@@ -7,6 +28,16 @@ class ProjectStore {
     }
 
     const name = project.name
+    this.storage.put(name, omit(project, 'isStart'))
+    this.map.set(name, project)
+  }
+
+  update(name, project) {
+    if (!this.has(name)) {
+      throw new Error('找不到该项目')
+    }
+
+    this.storage.put(name, omit(project, 'isStart'))
     this.map.set(name, project)
   }
 
@@ -15,11 +46,22 @@ class ProjectStore {
       throw new Error('找不到该项目')
     }
 
+    this.storage.remove(name)
     this.map.delete(name)
   }
 
   has(name) {
     return this.map.has(name)
+  }
+
+  exist(predicate) {
+    for (const proj of this) {
+      if (predicate(proj)) {
+        return true
+      }
+    }
+
+    return false
   }
 
   get(name) {
@@ -30,9 +72,11 @@ class ProjectStore {
     return this.map.get(name)
   }
 
-  iter() {
+  [Symbol.iterator]() {
     return this.map.values()
   }
 }
 
-module.exports = new ProjectStore
+const store = new ProjectStore()
+
+module.exports = store

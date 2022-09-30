@@ -2,6 +2,7 @@
   "dependencies": {
     "express": "^4.18.1",
     "express-http-proxy": "^1.6.3",
+    "node-storage": "^0.0.9",
     "pm2": "5.2.0"
   },
   "scripts": {

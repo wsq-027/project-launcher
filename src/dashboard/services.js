@@ -36,6 +36,7 @@ async function startProject({name}) {
   ps.addProxy(project.urlPrefix, project.proxyHost)
 
   project.isStart = true
+  store.update(name, project)
 }
 
 async function stopProject({name}) {
@@ -52,6 +53,7 @@ async function stopProject({name}) {
   ps.removeProxy(project.urlPrefix)
 
   project.isStart = false
+  store.update(name, project)
 }
 
 function removeProject({name}) {
@@ -65,12 +67,11 @@ function removeProject({name}) {
 }
 
 async function listProject() {
-  const projectList = [...store.iter()]
-  const hasProgress = projectList.some((proj) => proj.isLocal && proj.isStart)
+  const hasProgress = store.exist((proj) => proj.isLocal && proj.isStart)
   const progressList = hasProgress ? await pm.listProgress() : []
   const list = []
 
-  for (const project of store.iter()) {
+  for (const project of store) {
     if (project.isLocal && project.isStart) {
       const progress = hasProgress ? progressList.find((prog) => prog.name === project.name) : {}
 
@@ -88,7 +89,7 @@ async function listProject() {
 
 async function exit() {
   console.log('remove all project')
-  for (const project of store.iter()) {
+  for (const project of store) {
     if (project.isLocal && project.isStart) {
       await pm.removeProgress(project.name)
     }
