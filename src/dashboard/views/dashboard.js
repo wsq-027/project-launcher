@@ -1,4 +1,4 @@
-const { createApp, ref, reactive, onMounted, readonly } = Vue
+const { createApp, ref, reactive, onMounted, readonly, watch } = Vue
 const { ElMessage: message, ElMessageBox: box } = ElementPlus
 
 async function api(url, { data, method, params = {} } = {}) {
@@ -174,6 +174,7 @@ const app = createApp({
 
     function showProcessDetail(project) {
       processDetailVisible.value = true
+      let timeoutFlag
       const interval = async () => {
         processDetail.value = await api('/dashboard/project', {
           method: 'GET',
@@ -181,9 +182,16 @@ const app = createApp({
         })
 
         if (processDetailVisible.value) {
-          setTimeout(interval, 3000)
+          timeoutFlag = setTimeout(interval, 3000)
         }
       }
+
+      const unwatch = watch(processDetailVisible, () => {
+        if (!processDetailVisible.value) {
+          clearTimeout(timeoutFlag)
+          unwatch()
+        }
+      })
 
       interval()
     }

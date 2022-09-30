@@ -111,7 +111,7 @@
           <el-collapse-item name="metrics" title="Custom Metrics" v-if="processDetail.pm2_env.axm_monitor">
             <el-descriptions border :column="1">
               <el-descriptions-item v-for="(metrics, key) in processDetail.pm2_env.axm_monitor" :key="key" :label="key">
-                {{ metrics.value || metrics }} {{ metrics.unit }}
+                {{ metrics.value ?? metrics }} {{ metrics.unit }}
               </el-descriptions-item>
             </el-descriptions>
           </el-collapse-item>
