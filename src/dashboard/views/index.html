@@ -23,24 +23,23 @@
       <el-table border :data="projectList">
         <el-table-column label="项目标识" prop="name"></el-table-column>
         <el-table-column label="url前缀" prop="urlPrefix"></el-table-column>
-        <el-table-column label="代理目标host" prop="proxyHost"></el-table-column>
-        <el-table-column label="本地项目" prop="isLocal" :width="90" align="center">
-          <template #default="{ row }">
-            <el-checkbox v-model="row.isLocal" disabled />
+        <el-table-column label="代理目标host" prop="proxyHost" :min-width="220">
+          <template #default="{row }">
+            <el-tag v-if="row.isLocal" effect="dark" type="danger" size="small">local</el-tag>
+            <el-tag v-else effect="dark" type="success" size="small">online</el-tag>
+            <span style="margin-left: 5px;">{{ row.proxyHost }}</span>
           </template>
         </el-table-column>
         <el-table-column label="node执行文件" prop="script"></el-table-column>
         <el-table-column label="项目所在路径" prop="dir" :min-width="150"></el-table-column>
         <el-table-column label="运行" :width="70" align="center">
           <template #default="{ row }">
-            <el-switch v-model="row.isStart" disabled />
+            <el-switch :value="row.isStart" :before-change="() => switchProject(row)" :loading="row._loading" />
           </template>
         </el-table-column>
         <el-table-column label="操作" :width="190">
           <template #default="{ row }">
             <el-button v-if="!row.isStart" @click="removeProject(row)">删除</el-button>
-            <el-button v-if="!row.isStart" @click="startProject(row)">启动</el-button>
-            <el-button v-if="row.isStart" @click="stopProject(row)">停止</el-button>
             <el-button v-if="row.isStart" @click="showProcessDetail(row)">查看进程</el-button>
           </template>
         </el-table-column>
@@ -96,6 +95,9 @@
     <el-dialog  v-model="processDetailVisible" title="进程详情" :close-on-click-modal="false" :width="640">
       <template v-if="processDetail.pm2_env">
         <el-descriptions :title="processDetail.pm2_env.name" :column="3">
+          <template #extra>
+            <el-button @click="showProcessLog">查看日志</el-button>
+          </template>
           <el-descriptions-item label="Process Id:">
             [{{ processDetail.pm2_env.pm_id }}]
           </el-descriptions-item>

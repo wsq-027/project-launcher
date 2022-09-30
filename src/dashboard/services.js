@@ -83,6 +83,8 @@ async function detailProject({ name }) {
   }
 }
 
+
+
 async function exit() {
   console.log('remove all project')
   for (const project of store) {

@@ -30,6 +30,24 @@ async function api(url, { data, method, params = {} } = {}) {
   }
 }
 
+function sseApi(url, { params = {}, callback } = {}) {
+  const _url = new URL(url, location.href)
+
+  for (let key in params) {
+    _url.searchParams.append(key, params[key])
+  }
+
+  const sse = new EventSource(_url)
+
+  sse.addEventListener('message', (event) => {
+    callback(JSON.parse(event.data))
+  })
+
+  return function close() {
+    sse.close()
+  }
+}
+
 const DEFAULT_PROJECT = [
   {
     name: 'hospital(medical)',
@@ -154,6 +172,16 @@ const app = createApp({
       await getProjectList()
     }
 
+    async function switchProject(project) {
+      project._loading = true
+
+      if (project.isStart) {
+        stopProject(project)
+      } else {
+        startProject(project)
+      }
+    }
+
     async function removeProject(project) {
       await box.confirm('确定要删除该项目？')
 
@@ -174,26 +202,37 @@ const app = createApp({
 
     function showProcessDetail(project) {
       processDetailVisible.value = true
-      let timeoutFlag
-      const interval = async () => {
-        processDetail.value = await api('/dashboard/project', {
-          method: 'GET',
-          params: { name: project.name }
-        })
 
-        if (processDetailVisible.value) {
-          timeoutFlag = setTimeout(interval, 3000)
-        }
-      }
-
-      const unwatch = watch(processDetailVisible, () => {
-        if (!processDetailVisible.value) {
-          clearTimeout(timeoutFlag)
-          unwatch()
+      const close = sseApi('/dashboard/project/detail', {
+        params: {name: project.name},
+        callback(data) {
+          processDetail.value = data
         }
       })
 
-      interval()
+      const unwatch = watch(processDetailVisible, () => {
+        if (!processDetailVisible.value) {
+          close()
+          unwatch()
+        }
+      })
+    }
+
+    /** 日志弹窗 */
+    function showProcessLog() {
+      const close = sseApi('/dashboard/project/log', {
+        params: {},
+        callback(data) {
+          console.log('data: ', data)
+        }
+      })
+
+      const unwatch = watch(processDetailVisible, () => {
+        if (!processDetailVisible.value) {
+          close()
+          unwatch()
+        }
+      })
     }
 
     return {
@@ -206,13 +245,13 @@ const app = createApp({
       submitAddProject,
       defaultProject: readonly(DEFAULT_PROJECT),
       setDefaultProject,
-      startProject,
-      stopProject,
+      switchProject,
       removeProject,
       processDetail,
       processDetailVisible,
       showProcessDetail,
       gradient,
+      showProcessLog,
     }
   }
 })
