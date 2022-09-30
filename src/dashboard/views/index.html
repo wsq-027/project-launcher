@@ -41,7 +41,7 @@
             <el-button v-if="!row.isStart" @click="removeProject(row)">删除</el-button>
             <el-button v-if="!row.isStart" @click="startProject(row)">启动</el-button>
             <el-button v-if="row.isStart" @click="stopProject(row)">停止</el-button>
-            <el-button v-if="row.isStart" @click="showProgressDetail(row)">查看进程</el-button>
+            <el-button v-if="row.isStart" @click="showProcessDetail(row)">查看进程</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -93,24 +93,24 @@
       </template>
     </el-dialog>
 
-    <el-dialog  v-model="progressDetailVisible" title="进程详情" :close-on-click-modal="false" :width="640">
-      <template v-if="progressDetail.pm2_env">
-        <el-descriptions :title="progressDetail.pm2_env.name" :column="3">
-          <el-descriptions-item label="Progress Id:">
-            [{{ progressDetail.pm2_env.pm_id }}]
+    <el-dialog  v-model="processDetailVisible" title="进程详情" :close-on-click-modal="false" :width="640">
+      <template v-if="processDetail.pm2_env">
+        <el-descriptions :title="processDetail.pm2_env.name" :column="3">
+          <el-descriptions-item label="Process Id:">
+            [{{ processDetail.pm2_env.pm_id }}]
           </el-descriptions-item>
           <el-descriptions-item label="Mem:">
-            <b>{{ (progressDetail.monit.memory / 1048576).toFixed(2) }}</b> MB
+            <b>{{ (processDetail.monit.memory / 1048576).toFixed(2) }}</b> MB
           </el-descriptions-item>
           <el-descriptions-item label="CPU:">
-            <b :style="{ color: gradient(progressDetail.monit.cpu, [255, 0, 0], [0, 255, 0]) }">{{ progressDetail.monit.cpu}}</b> %
+            <b :style="{ color: gradient(processDetail.monit.cpu, [255, 0, 0], [0, 255, 0]) }">{{ processDetail.monit.cpu}}</b> %
           </el-descriptions-item>
         </el-descriptions>
 
         <el-collapse accordion model-value="metrics">
-          <el-collapse-item name="metrics" title="Custom Metrics" v-if="progressDetail.pm2_env.axm_monitor">
+          <el-collapse-item name="metrics" title="Custom Metrics" v-if="processDetail.pm2_env.axm_monitor">
             <el-descriptions border :column="1">
-              <el-descriptions-item v-for="(metrics, key) in progressDetail.pm2_env.axm_monitor" :key="key" :label="key">
+              <el-descriptions-item v-for="(metrics, key) in processDetail.pm2_env.axm_monitor" :key="key" :label="key">
                 {{ metrics.value || metrics }} {{ metrics.unit }}
               </el-descriptions-item>
             </el-descriptions>
@@ -119,58 +119,58 @@
           <el-collapse-item name="meta" title="Metadata">
             <el-descriptions border :column="1">
               <el-descriptions-item label="Name">
-                {{ progressDetail.pm2_env.name }}
+                {{ processDetail.pm2_env.name }}
               </el-descriptions-item>
               <el-descriptions-item label="Namespace">
-                {{progressDetail.pm2_env.namespace}}
+                {{processDetail.pm2_env.namespace}}
               </el-descriptions-item>
               <el-descriptions-item label="Version">
-                {{progressDetail.pm2_env.version}}
+                {{processDetail.pm2_env.version}}
               </el-descriptions-item>
               <el-descriptions-item label="Restarts">
-                {{progressDetail.pm2_env.restart_time}}
+                {{processDetail.pm2_env.restart_time}}
               </el-descriptions-item>
               <el-descriptions-item label="Uptime">
-                {{(progressDetail.pm2_env.pm_uptime && progressDetail.pm2_env.status == 'online') ? progressDetail.pm2_env.pm_uptime : 0}}
+                {{(processDetail.pm2_env.pm_uptime && processDetail.pm2_env.status == 'online') ? processDetail.pm2_env.pm_uptime : 0}}
               </el-descriptions-item>
               <el-descriptions-item label="Script Path">
-                {{progressDetail.pm2_env.pm_exec_path}}
+                {{processDetail.pm2_env.pm_exec_path}}
               </el-descriptions-item>
               <el-descriptions-item label="Scritp Args">
-                {{progressDetail.pm2_env.args ? (typeof progressDetail.pm2_env.args == 'string' ? JSON.parse(progressDetail.pm2_env.args.replace(/'/g, '"')):progressDetail.pm2_env.args).join(' ') : 'N/A'}}
+                {{processDetail.pm2_env.args ? (typeof processDetail.pm2_env.args == 'string' ? JSON.parse(processDetail.pm2_env.args.replace(/'/g, '"')):processDetail.pm2_env.args).join(' ') : 'N/A'}}
               </el-descriptions-item>
               <el-descriptions-item label="Interpreter">
-                {{progressDetail.pm2_env.exec_interpreter}}
+                {{processDetail.pm2_env.exec_interpreter}}
               </el-descriptions-item>
               <el-descriptions-item label="Interpreter Args">
-                {{progressDetail.pm2_env.node_args.length != 0 ? progressDetail.pm2_env.node_args : 'N/A'}}
+                {{processDetail.pm2_env.node_args.length != 0 ? processDetail.pm2_env.node_args : 'N/A'}}
               </el-descriptions-item>
               <el-descriptions-item label="Exec Mode">
-                {{progressDetail.pm2_env.exec_mode}}
+                {{processDetail.pm2_env.exec_mode}}
               </el-descriptions-item>
               <el-descriptions-item label="Node Version">
-                {{progressDetail.pm2_env.node_version}}
+                {{processDetail.pm2_env.node_version}}
               </el-descriptions-item>
               <el-descriptions-item label="Watch">
-                {{progressDetail.pm2_env.watch}}
+                {{processDetail.pm2_env.watch}}
               </el-descriptions-item>
               <el-descriptions-item label="Unstable Restart">
-                {{progressDetail.pm2_env.unstable_restarts}}
+                {{processDetail.pm2_env.unstable_restarts}}
               </el-descriptions-item>
               <el-descriptions-item label="Comment">
-                {{(progressDetail.pm2_env.versioning) ? progressDetail.pm2_env.versioning.comment : 'N/A'}}
+                {{(processDetail.pm2_env.versioning) ? processDetail.pm2_env.versioning.comment : 'N/A'}}
               </el-descriptions-item>
               <el-descriptions-item label="Revision">
-                {{(progressDetail.pm2_env.versioning) ? progressDetail.pm2_env.versioning.revision : 'N/A'}}
+                {{(processDetail.pm2_env.versioning) ? processDetail.pm2_env.versioning.revision : 'N/A'}}
               </el-descriptions-item>
               <el-descriptions-item label="Branch">
-                {{(progressDetail.pm2_env.versioning) ? progressDetail.pm2_env.versioning.branch : 'N/A'}}
+                {{(processDetail.pm2_env.versioning) ? processDetail.pm2_env.versioning.branch : 'N/A'}}
               </el-descriptions-item>
               <el-descriptions-item label="Remote Url">
-                {{(progressDetail.pm2_env.versioning) ? progressDetail.pm2_env.versioning.url : 'N/A'}}
+                {{(processDetail.pm2_env.versioning) ? processDetail.pm2_env.versioning.url : 'N/A'}}
               </el-descriptions-item>
               <el-descriptions-item label="Last Update">
-                {{(progressDetail.pm2_env.versioning) ? progressDetail.pm2_env.versioning.update_time : 'N/A'}}
+                {{(processDetail.pm2_env.versioning) ? processDetail.pm2_env.versioning.update_time : 'N/A'}}
               </el-descriptions-item>
             </el-descriptions>
           </el-collapse-item>

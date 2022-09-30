@@ -25,7 +25,7 @@ function resolvePathFromAbsoluteToRelateive(dir) {
   return path.relative(process.cwd(), dir.replace('~', process.env.HOME || process.env.USERPROFILE))
 }
 
-async function addProgress(projectName, projectDir, projectScript) {
+async function addProcess(projectName, projectDir, projectScript) {
   await connect()
 
   const proc = await manager.start({
@@ -41,7 +41,7 @@ async function addProgress(projectName, projectDir, projectScript) {
   return proc
 }
 
-async function removeProgress(projectName) {
+async function removeProcess(projectName) {
   await connect()
 
   await manager.stop(projectName)
@@ -49,7 +49,7 @@ async function removeProgress(projectName) {
   await manager.delete(projectName)
 }
 
-async function detailProgress(name) {
+async function detailProcess(name) {
   const procs = await manager.describe(name)
 
   return procs[0]
@@ -64,7 +64,7 @@ function exit() {
 process.on('exit', exit)
 
 module.exports = {
-  addProgress,
-  removeProgress,
-  detailProgress,
+  addProcess,
+  removeProcess,
+  detailProcess,
 }

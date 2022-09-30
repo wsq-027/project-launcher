@@ -1,4 +1,4 @@
-const pm = require('../progress-manager')
+const pm = require('../process-manager')
 const ps = require('../proxy-server')
 const store = require('../project-store')
 
@@ -30,7 +30,7 @@ async function startProject({name}) {
   }
 
   if (project.isLocal) {
-    await pm.addProgress(project.name, project.dir, project.script)
+    await pm.addProcess(project.name, project.dir, project.script)
   }
 
   ps.addProxy(project.urlPrefix, project.proxyHost)
@@ -47,7 +47,7 @@ async function stopProject({name}) {
   }
 
   if (project.isLocal) {
-    await pm.removeProgress(project.name)
+    await pm.removeProcess(project.name)
   }
 
   ps.removeProxy(project.urlPrefix)
@@ -79,7 +79,7 @@ async function detailProject({ name }) {
 
   return {
     ...project,
-    ...(await pm.detailProgress(name)),
+    ...(await pm.detailProcess(name)),
   }
 }
 
@@ -87,7 +87,7 @@ async function exit() {
   console.log('remove all project')
   for (const project of store) {
     if (project.isLocal && project.isStart) {
-      await pm.removeProgress(project.name)
+      await pm.removeProcess(project.name)
     }
   }
   process.exit()

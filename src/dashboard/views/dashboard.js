@@ -169,18 +169,18 @@ const app = createApp({
 
     /** 详情弹窗 */
 
-    const progressDetail = ref({})
-    const progressDetailVisible = ref(false)
+    const processDetail = ref({})
+    const processDetailVisible = ref(false)
 
-    function showProgressDetail(project) {
-      progressDetailVisible.value = true
+    function showProcessDetail(project) {
+      processDetailVisible.value = true
       const interval = async () => {
-        progressDetail.value = await api('/dashboard/project', {
+        processDetail.value = await api('/dashboard/project', {
           method: 'GET',
           params: { name: project.name }
         })
 
-        if (progressDetailVisible.value) {
+        if (processDetailVisible.value) {
           setTimeout(interval, 3000)
         }
       }
@@ -201,9 +201,9 @@ const app = createApp({
       startProject,
       stopProject,
       removeProject,
-      progressDetail,
-      progressDetailVisible,
-      showProgressDetail,
+      processDetail,
+      processDetailVisible,
+      showProcessDetail,
       gradient,
     }
   }
