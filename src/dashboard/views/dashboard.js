@@ -175,10 +175,14 @@ const app = createApp({
     async function switchProject(project) {
       project._loading = true
 
-      if (project.isStart) {
-        stopProject(project)
-      } else {
-        startProject(project)
+      try {
+        if (project.isStart) {
+          stopProject(project)
+        } else {
+          startProject(project)
+        }
+      } finally {
+        project._loading = false
       }
     }
 

@@ -4,9 +4,9 @@ const proxy = require('express-http-proxy')
 const app = express()
 
 function createProxy(basePath, host) {
-  return proxy(host, {
+  const _proxy = proxy(host, {
     proxyReqPathResolver(req) {
-      const url = basePath + req.url
+      const url = (basePath === '/' ? '' : basePath) + req.url
 
       console.log('[proxy]', req.method, url)
       console.log('[proxy From]', req.protocol + '://' + req.headers.host + req.originalUrl)
@@ -24,16 +24,38 @@ function createProxy(basePath, host) {
       }
     },
   })
+
+  _proxy.path = basePath
+  _proxy.level = basePath.split('/').filter(Boolean).length
+
+  return _proxy
+}
+
+function sortRoute(layer1, layer2) {
+  if (layer1.name === layer2.name && layer1.name === 'handleProxy') {
+    return layer2.handle.level - layer1.handle.level
+  }
+
+  if (layer1.name === 'handleProxy') {
+    return 1
+  }
+
+  if (layer2.name === 'handleProxy') {
+    return -1
+  }
+
+  return 0
 }
 
 function addProxy(path, proxyHost) {
-  const proxyPath = path === '/' ? '' : path
-  app.use(path, createProxy(proxyPath, proxyHost))
+  app.use(path, createProxy(path, proxyHost))
+  // 代理路径插入随机，但是路由请求需要按优先级排序
+  app._router.stack.sort(sortRoute)
 }
 
 function removeProxy(path) {
   const index = app._router.stack
-    .findIndex((layer) => layer.name ==='handleProxy' && RegExp(layer.regexp).test(path))
+  .findIndex((layer) => layer.name ==='handleProxy' && RegExp(layer.regexp).test(path))
 
   if (index === -1) {
     throw new Error('no such path: ' + path + ' !')
