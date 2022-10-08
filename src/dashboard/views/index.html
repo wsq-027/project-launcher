@@ -40,7 +40,7 @@
         <el-table-column label="操作" :width="190">
           <template #default="{ row }">
             <el-button v-if="!row.isStart" @click="removeProject(row)">删除</el-button>
-            <el-button v-if="row.isStart" @click="showProcessDetail(row)">查看进程</el-button>
+            <el-button v-if="row.isLocal && row.isStart" @click="showProcessDetail(row)">查看进程</el-button>
           </template>
         </el-table-column>
       </el-table>
