@@ -1,93 +1,9 @@
-const { createApp, ref, reactive, onMounted, readonly, watch } = Vue
+import {autoClose, gradient} from './utils.js'
+import {api, sseApi} from './api.js'
+import {DEFAULT_PROJECT} from './constants.js'
+
+const { createApp, ref, onMounted, readonly } = Vue
 const { ElMessage: message, ElMessageBox: box } = ElementPlus
-
-async function api(url, { data, method, params = {} } = {}) {
-  const _url = new URL(url, location.href)
-
-  for (let key in params) {
-    _url.searchParams.append(key, params[key])
-  }
-
-  try {
-    const res = await fetch(_url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-
-    const _data = await res.json()
-
-    if (!_data.success) {
-      throw _data
-    }
-
-    return _data.data
-  } catch (e) {
-    message.error(e.message)
-    throw e
-  }
-}
-
-function sseApi(url, { params = {}, callback } = {}) {
-  const _url = new URL(url, location.href)
-
-  for (let key in params) {
-    _url.searchParams.append(key, params[key])
-  }
-
-  const sse = new EventSource(_url)
-
-  sse.addEventListener('message', (event) => {
-    callback(JSON.parse(event.data))
-  })
-
-  return function close() {
-    sse.close()
-  }
-}
-
-const DEFAULT_PROJECT = [
-  {
-    name: 'hospital(medical)',
-    script: './bin/www',
-    urlPrefix: '/medical',
-    proxyHost: 'http://127.0.0.1:3331',
-    dir: '~/Documents/work/zoe-health-hospital',
-    isLocal: true,
-  },
-  {
-    name: 'app-pay(pay)',
-    script: './bin/www',
-    urlPrefix: '/pay',
-    proxyHost: 'http://127.0.0.1:3334',
-    dir: '~/Documents/work/zoe-health-app-pay',
-    isLocal: true,
-  },
-  {
-    name: 'app',
-    script: './bin/www',
-    urlPrefix: '/',
-    proxyHost: 'http://127.0.0.1:3330',
-    dir: '~/Documents/work/zoe-health-app',
-    isLocal: true,
-  },
-]
-
-function gradient(p, rgb_beginning, rgb_end) {
-
-  var w = (p / 100) * 2 - 1;
-
-  var w1 = (w + 1) / 2.0;
-  var w2 = 1 - w1;
-
-  var rgb = [parseInt(rgb_beginning[0] * w1 + rgb_end[0] * w2),
-      parseInt(rgb_beginning[1] * w1 + rgb_end[1] * w2),
-          parseInt(rgb_beginning[2] * w1 + rgb_end[2] * w2)];
-
-  return "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
-}
 
 const app = createApp({
   setup() {
@@ -207,36 +123,22 @@ const app = createApp({
     function showProcessDetail(project) {
       processDetailVisible.value = true
 
-      const close = sseApi('/dashboard/project/detail', {
+      autoClose(processDetailVisible, sseApi('/dashboard/project/detail', {
         params: {name: project.name},
         callback(data) {
           processDetail.value = data
         }
-      })
-
-      const unwatch = watch(processDetailVisible, () => {
-        if (!processDetailVisible.value) {
-          close()
-          unwatch()
-        }
-      })
+      }))
     }
 
     /** 日志弹窗 */
     function showProcessLog() {
-      const close = sseApi('/dashboard/project/log', {
+      autoClose(processDetailVisible, sseApi('/dashboard/project/log', {
         params: {},
         callback(data) {
           console.log('data: ', data)
         }
-      })
-
-      const unwatch = watch(processDetailVisible, () => {
-        if (!processDetailVisible.value) {
-          close()
-          unwatch()
-        }
-      })
+      }))
     }
 
     return {
