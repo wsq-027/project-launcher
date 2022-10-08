@@ -1,3 +1,5 @@
+const { ElMessage: message } = ElementPlus
+
 export async function api(url, { data, method, params = {} } = {}) {
   const _url = new URL(url, location.href)
 

@@ -1,5 +1,6 @@
 import {autoClose, gradient} from './utils.js'
-import {api, sseApi} from './api.js'
+// import {api, sseApi} from './api.js'
+import {api, sseApi} from './ipc.js'
 import {DEFAULT_PROJECT} from './constants.js'
 
 const { createApp, ref, onMounted, readonly } = Vue

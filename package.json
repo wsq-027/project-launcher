@@ -12,5 +12,8 @@
     "monit": "pm2 monit",
     "stop": "pm2 stop all",
     "restart:server": "pm2 restart 0"
+  },
+  "devDependencies": {
+    "electron": "^21.1.0"
   }
 }
