@@ -2,35 +2,10 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const services = require('./services')
 
-function createWindow() {
-  const win = new BrowserWindow({
-    width: 1000,
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, './preload.js')
-    },
-  })
-
-  win.loadFile(path.join(__dirname, './views/index.html'))
-}
-
-app.whenReady().then(() => {
-  initIPC()
-  createWindow()
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
-
-app.on('window-all-closed', () => {
-  app.quit()
-})
-
-function createSchedule({ delay, callback, onClose = () => {} }) {
+function createSchedule({ idPrefix = '', delay, callback, onClose = () => {} }) {
   let timeoutFlag = null
   let hasStart = false
-  const id = Date.now().toString()
+  const id = idPrefix + Date.now().toString()
 
   function stop() {
     clearTimeout(timeoutFlag)
@@ -56,12 +31,46 @@ function createSchedule({ delay, callback, onClose = () => {} }) {
     refresh()
   }
 
-  return {
+  const schedule = {
     start,
     stop,
     id,
   }
+
+  createSchedule.scheduleList.push(schedule)
+
+  return schedule
 }
+
+createSchedule.scheduleList = []
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1000,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, './preload.js')
+    },
+  })
+
+  win.loadFile(path.join(__dirname, './views/index.html'))
+
+  createSchedule.scheduleList.forEach((schedule) => schedule.stop())
+  createSchedule.scheduleList = []
+}
+
+app.whenReady().then(() => {
+  initIPC()
+  createWindow()
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+})
+
+app.on('window-all-closed', () => {
+  app.quit()
+})
 
 function initIPC() {
   ipcMain.handle('PUT:/dashboard/project', async (event, data) => {
@@ -92,8 +101,9 @@ function initIPC() {
   })
 
   ipcMain.handle('GET:/dashboard/project/detail', (event, query) => {
-    let replyUrl = '/dashboard/project/detail?'
+    const replyUrl = '/dashboard/project/detail'
     const schedule = createSchedule({
+      idPrefix: replyUrl + '?id=',
       callback: async () => {
         const data = await services.detailProject({ name: query.name })
         event.sender.send('REPLY:' + replyUrl, data)
@@ -101,12 +111,10 @@ function initIPC() {
       delay: 2000
     })
 
-    replyUrl += 'id=' + schedule.id
-
-    ipcMain.handleOnce('CLOSE:' + replyUrl, schedule.stop)
+    ipcMain.handleOnce('CLOSE:' + schedule.id, schedule.stop)
     schedule.start()
 
-    return replyUrl
+    return schedule.id
   })
 
   ipcMain.handle('GET:/dashboard/project/log', async (req, res) => {
@@ -121,5 +129,6 @@ function initIPC() {
     // sse.once('close', () => {
     //   clearInterval(interval)
     // })
+    throw new Error('功能开发中')
   })
 }

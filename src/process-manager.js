@@ -55,16 +55,14 @@ async function detailProcess(name) {
   return procs[0]
 }
 
-function exit() {
-  pm2.disconnect()
+function disconnect() {
   hasConnect = false
-  console.log('exit')
+  pm2.disconnect()
 }
-
-process.on('exit', exit)
 
 module.exports = {
   addProcess,
   removeProcess,
   detailProcess,
+  disconnect,
 }

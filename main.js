@@ -1,12 +1,20 @@
-require('./src/dashboard/windows')
-
 const server = require('./src/proxy-server')
-// const dashboard = require('./src/dashboard/router')
-// server.app.use('/dashboard', dashboard)
+
+const isDesktop = !!process.versions.electron
+
+if (isDesktop) {
+  require('./src/dashboard/windows')
+} else {
+  const dashboard = require('./src/dashboard/router')
+  server.app.use('/dashboard', dashboard)
+}
 
 const port = 3335
 server.start(port)
-console.log(`Server start on http://127.0.0.1:${port}/dashboard`)
+
+if (!isDesktop) {
+  console.log(`Server start on http://127.0.0.1:${port}/dashboard`)
+}
 
 // server.addProxy('/medical', 'http://127.0.0.1:3331'))
 // server.addProxy('/pay', 'http://127.0.0.1:3334')

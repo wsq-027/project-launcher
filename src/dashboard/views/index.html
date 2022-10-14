@@ -30,14 +30,14 @@
             <span style="margin-left: 5px;">{{ row.proxyHost }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="node执行文件" prop="script"></el-table-column>
-        <el-table-column label="项目所在路径" prop="dir" :min-width="150"></el-table-column>
+        <el-table-column label="node执行文件" prop="script" :width="130"></el-table-column>
+        <el-table-column label="项目所在路径" prop="dir" :min-width="180"></el-table-column>
         <el-table-column label="运行" :width="70" align="center">
           <template #default="{ row }">
             <el-switch :value="row.isStart" :before-change="() => switchProject(row)" :loading="row._loading" />
           </template>
         </el-table-column>
-        <el-table-column label="操作" :width="190">
+        <el-table-column label="操作" :width="120">
           <template #default="{ row }">
             <el-button v-if="!row.isStart" @click="removeProject(row)">删除</el-button>
             <el-button v-if="row.isLocal && row.isStart" @click="showProcessDetail(row)">查看进程</el-button>

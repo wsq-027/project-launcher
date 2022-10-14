@@ -1,7 +1,7 @@
 import {autoClose, gradient} from './utils.js'
-// import {api, sseApi} from './api.js'
-import {api, sseApi} from './ipc.js'
 import {DEFAULT_PROJECT} from './constants.js'
+
+import {api, apiStream} from './api.js'
 
 const { createApp, ref, onMounted, readonly } = Vue
 const { ElMessage: message, ElMessageBox: box } = ElementPlus
@@ -124,7 +124,7 @@ const app = createApp({
     function showProcessDetail(project) {
       processDetailVisible.value = true
 
-      autoClose(processDetailVisible, sseApi('/dashboard/project/detail', {
+      autoClose(processDetailVisible, apiStream('/dashboard/project/detail', {
         params: {name: project.name},
         callback(data) {
           processDetail.value = data
@@ -134,12 +134,13 @@ const app = createApp({
 
     /** 日志弹窗 */
     function showProcessLog() {
-      autoClose(processDetailVisible, sseApi('/dashboard/project/log', {
-        params: {},
-        callback(data) {
-          console.log('data: ', data)
-        }
-      }))
+      // autoClose(processDetailVisible, apiStream('/dashboard/project/log', {
+      //   params: {},
+      //   callback(data) {
+      //     console.log('data: ', data)
+      //   }
+      // }))
+      message.warning('功能开发中')
     }
 
     return {

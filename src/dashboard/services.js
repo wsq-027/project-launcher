@@ -85,18 +85,25 @@ async function detailProject({ name }) {
 
 
 
-async function exit() {
+function doExit() {
+  console.log('do exit')
+  process.exit()
+}
+
+async function onExit() {
   console.log('remove all project')
   for (const project of store) {
     if (project.isLocal && project.isStart) {
       await pm.removeProcess(project.name)
     }
   }
-  process.exit()
+
+  pm.disconnect()
 }
 
-process.on('SIGTERM', exit)
-process.on('SIGINT', exit)
+process.on('SIGTERM', doExit)
+process.on('SIGINT', doExit)
+process.on('exit', onExit)
 
 module.exports = {
   addProject,
