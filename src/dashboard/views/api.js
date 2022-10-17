@@ -1,3 +1,5 @@
+import { isDesktop } from "./utils.js"
+
 const { ElMessage: message } = ElementPlus
 
 async function _api(url, { data, method, params = {} } = {}) {
@@ -44,7 +46,7 @@ function _sseApi(url, { params = {}, callback } = {}) {
 
 export async function api(url, { data, method = 'GET', params = {}} = {}) {
   try {
-    if (window.projectApi) {
+    if (isDesktop) {
       return window.projectApi.invoke({method, url, data: { ...data, ...params }})
     }
 
@@ -57,7 +59,7 @@ export async function api(url, { data, method = 'GET', params = {}} = {}) {
 
 export function apiStream(url, { params = {}, callback } = {}) {
   try {
-    if (window.projectApi) {
+    if (isDesktop) {
       return window.projectApi.listen({ url, data: params, callback})
     }
 

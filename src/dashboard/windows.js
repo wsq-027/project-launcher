@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 const services = require('./services')
 
@@ -100,6 +100,19 @@ function initIPC() {
     return list
   })
 
+  ipcMain.handle('GET:/dashboard/project/select-directory', async () => {
+    const parent = BrowserWindow.getFocusedWindow()
+
+    return await dialog.showOpenDialog(parent, {
+      title: '选择目录',
+      properties: [
+        'openDirectory',
+        'dontAddToRecent',
+      ],
+    })
+  })
+
+  // stream
   ipcMain.handle('GET:/dashboard/project/detail', (event, query) => {
     const replyUrl = '/dashboard/project/detail'
     const schedule = createSchedule({
@@ -117,7 +130,24 @@ function initIPC() {
     return schedule.id
   })
 
-  ipcMain.handle('GET:/dashboard/project/log', async (req, res) => {
+  ipcMain.handle('GET:/dashboard/project/proxy-log', (event, query) => {
+    const id = String(new Date)
+    const replyUrl = '/dashbaord/project/proxy-log?id=' + id
+
+    const listener = (logData) => {
+      event.sender.send('REPLY:' + replyUrl, logData)
+    }
+
+    services.subscribeProxyLog(listener)
+
+    ipcMain.handleOnce('CLOSE:' + replyUrl, () => {
+      services.unsubscribeProxyLog(listener)
+    })
+
+    return replyUrl
+  })
+
+  ipcMain.handle('GET:/dashboard/project/log', async () => {
     // const sse = createSSEServer(req, res)
 
     // sse.write(new Date())

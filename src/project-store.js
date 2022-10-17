@@ -54,16 +54,6 @@ class ProjectStore {
     return this.map.has(name)
   }
 
-  exist(predicate) {
-    for (const proj of this) {
-      if (predicate(proj)) {
-        return true
-      }
-    }
-
-    return false
-  }
-
   get(name) {
     if (!this.has(name)) {
       throw new Error('找不到该项目')

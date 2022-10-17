@@ -83,7 +83,13 @@ async function detailProject({ name }) {
   }
 }
 
+function subscribeProxyLog(listener) {
+  ps.logs.subscribe(listener)
+}
 
+function unsubscribeProxyLog(listener) {
+  ps.logs.unsubscribe(listener)
+}
 
 function doExit() {
   console.log('do exit')
@@ -112,4 +118,6 @@ module.exports = {
   removeProject,
   listProject,
   detailProject,
+  subscribeProxyLog,
+  unsubscribeProxyLog,
 }

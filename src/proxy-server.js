@@ -1,5 +1,24 @@
 const express = require('express')
 const proxy = require('express-http-proxy')
+const Emitter = require('events')
+
+const logs = {
+  _emitter: new Emitter,
+  log(req, host, url) {
+    this._emitter.emit('log', {
+      proxy: req.method + ' ' + url,
+      from: req.protocol + '://' + req.headers.host + req.originalUrl,
+      to: host + url,
+      timestamp: Date.now(),
+    })
+  },
+  subscribe(listener) {
+    this._emitter.on('log', listener)
+  },
+  unsubscribe(listener) {
+    this._emitter.off('log', listener)
+  },
+}
 
 const app = express()
 
@@ -8,9 +27,7 @@ function createProxy(basePath, host) {
     proxyReqPathResolver(req) {
       const url = (basePath === '/' ? '' : basePath) + req.url
 
-      console.log('[proxy]', req.method, url)
-      console.log('[proxy From]', req.protocol + '://' + req.headers.host + req.originalUrl)
-      console.log('[proxy To]', host + url)
+      logs.log(req, host, url)
 
       return url
     },
@@ -73,4 +90,5 @@ module.exports = {
   addProxy,
   removeProxy,
   start,
+  logs,
 }
