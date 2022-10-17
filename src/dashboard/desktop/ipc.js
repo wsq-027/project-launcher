@@ -79,12 +79,12 @@ function initIPC() {
       return { success: false }
     }
 
-    const file = res.filePaths[0]
+    const path = res.filePaths[0]
 
     return {
       success: true,
-      file,
-      relativePath: path.relative(query.dir, file)
+      path,
+      relativePath: query.dir ? path.relative(query.dir, path) : ''
     }
   })
 

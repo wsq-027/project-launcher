@@ -116,20 +116,23 @@
     </el-container>
 
     <el-dialog v-model="newProjectVisible" title="新增" :close-on-click-modal="false" :width="480" align-center>
-      <el-dropdown @command="setDefaultProject">
-        <el-button class="el-dropdown-link">默认项目</el-button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item v-for="project in defaultProject" :key="project.name" :command="project.name">
-                {{ project.name }}
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
 
       <el-form ref="newProjectForm" :model="newProject" label-width="120px">
         <el-form-item label="项目标识" prop="name" required>
-          <el-input v-model="newProject.name" />
+          <el-input v-model="newProject.name">
+            <template #append>
+              <el-dropdown trigger="click" @command="setDefaultProject">
+                <el-button class="el-dropdown-link">example</el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item v-for="project in defaultProject" :key="project.name" :command="project.name">
+                        {{ project.name }}
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
+          </el-input>
         </el-form-item>
 
         <el-form-item label="url前缀" prop="urlPrefix" required>
@@ -147,16 +150,16 @@
         <template v-if="newProject.isLocal">
           <el-form-item label="项目目录" prop="dir" required>
             <el-input v-model="newProject.dir">
-              <template v-if="isDesktop" #suffix>
-                <el-button size="small" type="primary" @click="onDirectory" icon="FolderAdd" title="选择目录"></el-button>
+              <template v-if="isDesktop" #append>
+                <el-button size="small" @click="onDirectory" icon="FolderAdd" title="选择目录"></el-button>
               </template>
             </el-input>
           </el-form-item>
 
           <el-form-item label="node执行文件" prop="script" required>
             <el-input v-model="newProject.script">
-              <template v-if="isDesktop" #suffix>
-                <el-button size="small" type="primary" @click="onScriptFile" icon="DocumentAdd" title="选择文件"></el-button>
+              <template v-if="isDesktop" #append>
+                <el-button size="small" @click="onScriptFile" icon="DocumentAdd" title="选择文件"></el-button>
               </template>
             </el-input>
           </el-form-item>

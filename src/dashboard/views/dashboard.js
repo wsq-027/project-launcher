@@ -3,7 +3,13 @@ import {DEFAULT_PROJECT} from './constants.js'
 
 import {api, apiStream} from './api.js'
 
-const { createApp, ref, onMounted, readonly, nextTick } = Vue
+const {
+  createApp,
+  ref,
+  readonly,
+  onMounted,
+  nextTick,
+} = Vue
 const { ElMessage: message, ElMessageBox: box } = ElementPlus
 const { FolderAdd, DocumentAdd } = ElementPlusIconsVue
 
@@ -93,6 +99,14 @@ function useNewProject({ getProjectList }) {
 
   function onAddProject() {
     newProjectVisible.value = true
+    newProject.value = {
+      name: '',
+      script: '',
+      dir: '',
+      urlPrefix: '/',
+      proxyHost: 'http://',
+      isLocal: false,
+    }
   }
 
   function cancelAddProject(){
@@ -144,7 +158,11 @@ function useNewProject({ getProjectList }) {
       })
 
       if (res.success) {
-        newProject.value.script = res.relativePath
+        newProject.value.script = res.relativePath || res.path
+
+        if (!newProject.value.dir) {
+          newProject.value.dir = res.path.substring(0, res.path.lastIndexOf('/'))
+        }
       }
     }
   }
