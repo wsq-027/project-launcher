@@ -3,7 +3,7 @@ const server = require('./src/proxy-server')
 const isDesktop = !!process.versions.electron
 
 if (isDesktop) {
-  require('./src/dashboard/windows')
+  require('./src/dashboard/desktop/index')
 } else {
   const dashboard = require('./src/dashboard/router')
   server.app.use('/dashboard', dashboard)

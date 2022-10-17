@@ -58,12 +58,16 @@ export async function api(url, { data, method = 'GET', params = {}} = {}) {
 }
 
 export function apiStream(url, { params = {}, callback } = {}) {
+  const onError = (err) => {
+    message.error(err.message)
+  }
+
   try {
     if (isDesktop) {
-      return window.projectApi.listen({ url, data: params, callback})
+      return window.projectApi.listen({ url, data: params, callback, error: onError})
     }
 
-    return _sseApi(url, { params, callback })
+    return _sseApi(url, { params, callback, error: onError })
   } catch (e) {
     message.error(e.message)
     throw e

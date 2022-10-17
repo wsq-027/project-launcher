@@ -115,7 +115,7 @@
       </el-main>
     </el-container>
 
-    <el-dialog v-model="newProjectVisible" title="新增" :close-on-click-modal="false" :width="480">
+    <el-dialog v-model="newProjectVisible" title="新增" :close-on-click-modal="false" :width="480" align-center>
       <el-dropdown @command="setDefaultProject">
         <el-button class="el-dropdown-link">默认项目</el-button>
         <template #dropdown>
@@ -145,14 +145,18 @@
         </el-form-item>
 
         <template v-if="newProject.isLocal">
-          <el-form-item label="node执行文件" prop="script" required>
-            <el-input v-model="newProject.script" />
-          </el-form-item>
-
           <el-form-item label="项目目录" prop="dir" required>
             <el-input v-model="newProject.dir">
               <template v-if="isDesktop" #suffix>
-                <el-button size="small" type="primary" @click="onDirectory">选择目录</el-button>
+                <el-button size="small" type="primary" @click="onDirectory" icon="FolderAdd" title="选择目录"></el-button>
+              </template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item label="node执行文件" prop="script" required>
+            <el-input v-model="newProject.script">
+              <template v-if="isDesktop" #suffix>
+                <el-button size="small" type="primary" @click="onScriptFile" icon="DocumentAdd" title="选择文件"></el-button>
               </template>
             </el-input>
           </el-form-item>

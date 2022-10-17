@@ -14,9 +14,13 @@ contextBridge.exposeInMainWorld('projectApi', {
 
     const res = await ipcRenderer.invoke(action, data)
     info('[invoke return]', res)
-    return res
+    if (res.success) {
+      return res.data
+    }
+
+    throw res
   },
-  listen: ({ url, data, callback }) => {
+  listen: ({ url, data, callback, error }) => {
     const action = 'GET:' + url
     info('[listen]', url)
 
@@ -26,17 +30,25 @@ contextBridge.exposeInMainWorld('projectApi', {
 
     const reply = ipcRenderer.invoke(action, data)
 
-    reply.then((replyUrl) => {
-      ipcRenderer.on('REPLY:' + replyUrl, (event, arg) => {
-        info('[listen reply]', url, arg)
-        callback(arg)
-      })
+    reply.then((res) => {
+      if (res.success) {
+        ipcRenderer.on('REPLY:' + res.data, (event, arg) => {
+          info('[listen reply]', url, arg)
+          callback(arg)
+        })
+      } else {
+        error(res)
+      }
     })
 
     return function close() {
-      reply.then((replyUrl) => {
-        info('[listen close]', url)
-        ipcRenderer.invoke('CLOSE:' + replyUrl)
+      reply.then((res) => {
+        if (res.success) {
+          info('[listen close]', url)
+          ipcRenderer.invoke('CLOSE:' + res.data)
+        } else {
+          error(res)
+        }
       })
     }
   }

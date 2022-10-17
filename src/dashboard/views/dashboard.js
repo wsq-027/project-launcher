@@ -5,6 +5,7 @@ import {api, apiStream} from './api.js'
 
 const { createApp, ref, onMounted, readonly, nextTick } = Vue
 const { ElMessage: message, ElMessageBox: box } = ElementPlus
+const { FolderAdd, DocumentAdd } = ElementPlusIconsVue
 
 function useProjectList() {
   /** 初始化 */
@@ -128,10 +129,22 @@ function useNewProject({ getProjectList }) {
     if (isDesktop) {
       const res = await api('/dashboard/project/select-directory')
 
-      console.log('directory', res)
+      if (res.success) {
+        newProject.value.dir = res.directory
+      }
+    }
+  }
 
-      if (!res.canceled) {
-        newProject.value.dir = res.filePaths[0]
+  async function onScriptFile() {
+    if (isDesktop) {
+      const res = await api('/dashboard/project/select-file', {
+        params: {
+          dir: newProject.value.dir
+        }
+      })
+
+      if (res.success) {
+        newProject.value.script = res.relativePath
       }
     }
   }
@@ -145,6 +158,7 @@ function useNewProject({ getProjectList }) {
     submitAddProject,
     setDefaultProject,
     onDirectory,
+    onScriptFile,
   }
 }
 
@@ -165,27 +179,21 @@ function useDetail() {
     }))
   }
 
+  function showProcessLog() {
+    api('/dashboard/project/view-file', {
+      params: {
+        filename: processDetail.value.pm2_env.pm_out_log_path,
+        // filename: processDetail.value.pm2_env.pm_err_log_path,
+      }
+    })
+    // message.warning('功能开发中')
+  }
+
   return {
     processDetail,
     processDetailVisible,
     showProcessDetail,
-  }
-}
-
-function useLog() {
-  /** 日志弹窗 */
-  function showProcessLog() {
-    // autoClose(processDetailVisible, apiStream('/dashboard/project/log', {
-    //   params: {},
-    //   callback(data) {
-    //     console.log('data: ', data)
-    //   }
-    // }))
-    message.warning('功能开发中')
-  }
-
-  return {
-    showProcessLog,
+    showProcessLog
   }
 }
 
@@ -220,7 +228,6 @@ const app = createApp({
     const listModule = useProjectList()
     const newModule = useNewProject(listModule)
     const detailModule = useDetail()
-    const logModule = useLog()
     const proxyLogModule = useProxyLog()
 
     const filterDate = (timestamp) => {
@@ -233,7 +240,6 @@ const app = createApp({
       ...listModule,
       ...newModule,
       ...detailModule,
-      ...logModule,
       ...proxyLogModule,
       defaultProject: readonly(DEFAULT_PROJECT),
       gradient,
@@ -244,4 +250,6 @@ const app = createApp({
 })
 
 app.use(ElementPlus)
+app.component('FolderAdd', FolderAdd)
+app.component('DocumentAdd', DocumentAdd)
 app.mount('#app')
