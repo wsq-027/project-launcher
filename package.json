@@ -1,19 +1,57 @@
 {
+  "name": "projects-launcher",
+  "version": "0.1",
+  "main": "./main.js",
   "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
     "express": "^4.18.1",
     "express-http-proxy": "^1.6.3",
     "node-storage": "^0.0.9",
     "pm2": "5.2.0"
   },
   "scripts": {
-    "start": "node main.js",
+    "start": "electron-forge start",
     "pm2": "pm2 start ./old/pm2.config.js",
     "ls": "pm2 ls",
     "monit": "pm2 monit",
     "stop": "pm2 stop all",
-    "restart:server": "pm2 restart 0"
+    "restart:server": "pm2 restart 0",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.67",
+    "@electron-forge/maker-deb": "^6.0.0-beta.67",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.67",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.67",
+    "@electron-forge/maker-zip": "^6.0.0-beta.67",
     "electron": "^21.1.0"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": ""
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ]
+    }
   }
 }
