@@ -1,6 +1,7 @@
 const pm = require('../process-manager')
 const ps = require('../proxy-server')
 const store = require('../project-store')
+const { isDesktop } = require('../common')
 
 async function addProject({ name, dir, urlPrefix, proxyHost, isLocal, script }) {
   if (!script) {
@@ -107,9 +108,15 @@ async function onExit() {
   pm.disconnect()
 }
 
+if (isDesktop) {
+  const { app } = require('electron')
+  app.on('before-quit', onExit)
+} else {
+  process.on('exit', onExit)
+}
+
 process.on('SIGTERM', doExit)
 process.on('SIGINT', doExit)
-process.on('exit', onExit)
 
 module.exports = {
   addProject,

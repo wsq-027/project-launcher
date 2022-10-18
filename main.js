@@ -1,5 +1,6 @@
+const fs = require('fs')
 const server = require('./src/proxy-server')
-const { isDesktop } = require('./src/common')
+const { isDesktop, getUserPath, tryRun } = require('./src/common')
 
 if (isDesktop) {
   require('./src/dashboard/desktop/index')
@@ -8,7 +9,7 @@ if (isDesktop) {
   server.app.use('/dashboard', dashboard)
 }
 
-const port = 3335
+const port = tryRun(() => fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}))?.toString?.() ?? 3335
 server.start(port)
 
 if (!isDesktop) {

@@ -10,7 +10,16 @@ function getUserPath() {
   return userPath
 }
 
+function tryRun(fn) {
+  try {
+    return fn()
+  } catch (e) {
+    return null
+  }
+}
+
 module.exports = {
   isDesktop,
   getUserPath,
+  tryRun,
 }
