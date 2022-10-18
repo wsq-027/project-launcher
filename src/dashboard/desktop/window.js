@@ -18,6 +18,17 @@ function createWindow() {
   clearSchedule()
 }
 
+function activeWindow() {
+  if (!win || win.isDestroyed()) {
+    createWindow()
+  } else if (!win.isVisible()) {
+    win.show()
+  } else if (win.isMinimized()) {
+    win.restore()
+  }
+}
+
 module.exports = {
   createWindow,
+  activeWindow,
 }

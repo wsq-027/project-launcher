@@ -1,13 +1,7 @@
-const { app, BrowserWindow } = require('electron')
+const { app } = require('electron')
 const { initIPC } = require('./ipc')
-const { createWindow } = require('./window')
+const { createWindow, activeWindow } = require('./window')
 const { initTray } = require('./tray')
-
-function activeWindow() {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
-  }
-}
 
 app.whenReady().then(() => {
   initIPC()

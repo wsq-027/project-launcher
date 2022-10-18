@@ -92,31 +92,45 @@ function unsubscribeProxyLog(listener) {
   ps.logs.unsubscribe(listener)
 }
 
-function doExit() {
-  console.log('do exit')
-  process.exit()
-}
-
+let hasClear = false
 async function onExit() {
-  console.log('remove all project')
+  console.log('on exit')
+  if (hasClear) {
+    return
+  }
+
   for (const project of store) {
     if (project.isLocal && project.isStart) {
       await pm.removeProcess(project.name)
     }
   }
 
+  console.log('remove all project')
+
   pm.disconnect()
+
+  hasClear = true
 }
 
 if (isDesktop) {
-  const { app } = require('electron')
-  app.on('before-quit', onExit)
+  const {app} = require('electron')
+
+  app.once('before-quit', async (event) => {
+    if (!hasClear) {
+      event.preventDefault()
+    }
+
+    await onExit()
+
+    app.quit()
+  })
 } else {
-  process.on('exit', onExit)
+  process.on('beforeExit', async (code) => {
+    await onExit()
+    process.exit(code)
+  })
 }
 
-process.on('SIGTERM', doExit)
-process.on('SIGINT', doExit)
 
 module.exports = {
   addProject,
