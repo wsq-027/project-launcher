@@ -1,6 +1,5 @@
 const server = require('./src/proxy-server')
-
-const isDesktop = !!process.versions.electron
+const { isDesktop } = require('./src/common')
 
 if (isDesktop) {
   require('./src/dashboard/desktop/index')

@@ -1,6 +1,7 @@
 const util = require('util')
 const path = require('path')
 const pm2 = require('pm2')
+const {getUserPath} = require('./common')
 
 const manager = {
   connect: util.promisify(pm2.connect).bind(pm2),
@@ -32,9 +33,9 @@ async function addProcess(projectName, projectDir, projectScript) {
     name: projectName,
     script: projectScript,
     cwd: resolvePathFromAbsoluteToRelateive(projectDir),
-    error_file: path.resolve(`./logs/${projectName}_error.log`),
-    out_file: path.resolve(`./logs/${projectName}_out.log`),
-    pid_file: path.resolve(`./logs/${projectName}.pid`),
+    error_file: path.join(getUserPath(), `./logs/${projectName}_error.log`),
+    out_file: path.join(getUserPath(), `./logs/${projectName}_out.log`),
+    pid_file: path.join(getUserPath(), `./logs/${projectName}.pid`),
     exec_mode: 'cluster',
   })
 

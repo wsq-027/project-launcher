@@ -14,9 +14,14 @@ function regist(method, url, action) {
         data: result
       }
     } catch (e) {
+      if (Array.isArray(e)) {
+        e = e[0]
+      }
+
       return {
         success: false,
-        message: e.message
+        message: e.message,
+        extra: e,
       }
     }
   })

@@ -1,4 +1,5 @@
 const Storage = require('node-storage')
+const { getUserPath } = require('./common')
 
 function omit(obj, key) {
   const result = {}
@@ -14,8 +15,8 @@ function omit(obj, key) {
 
 class ProjectStore {
   constructor() {
-    this.storage = new Storage('./.projects-storage.json')
     this.map = new Map
+    this.storage = new Storage(getUserPath() + '/projects-storage.json')
 
     for (const name in this.storage.store) {
       this.map.set(name, { ...this.storage.store[name], isStart: false })
