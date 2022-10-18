@@ -177,6 +177,7 @@
         <el-descriptions :title="processDetail.pm2_env.name" :column="3">
           <template #extra>
             <el-button @click="showProcessLog">查看日志</el-button>
+            <el-button @click="showProcessError">查看异常日志</el-button>
           </template>
           <el-descriptions-item label="Process Id:">
             [{{ processDetail.pm2_env.pm_id }}]
@@ -239,7 +240,7 @@
               <el-descriptions-item label="Unstable Restart">
                 {{processDetail.pm2_env.unstable_restarts}}
               </el-descriptions-item>
-              <el-descriptions-item label="Comment">
+              <!-- <el-descriptions-item label="Comment">
                 {{(processDetail.pm2_env.versioning) ? processDetail.pm2_env.versioning.comment : 'N/A'}}
               </el-descriptions-item>
               <el-descriptions-item label="Revision">
@@ -253,7 +254,7 @@
               </el-descriptions-item>
               <el-descriptions-item label="Last Update">
                 {{(processDetail.pm2_env.versioning) ? processDetail.pm2_env.versioning.update_time : 'N/A'}}
-              </el-descriptions-item>
+              </el-descriptions-item> -->
             </el-descriptions>
           </el-collapse-item>
         </el-collapse>

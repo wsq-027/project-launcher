@@ -201,17 +201,24 @@ function useDetail() {
     api('/dashboard/project/view-file', {
       params: {
         filename: processDetail.value.pm2_env.pm_out_log_path,
-        // filename: processDetail.value.pm2_env.pm_err_log_path,
       }
     })
-    // message.warning('功能开发中')
+  }
+
+  function showProcessError() {
+    api('/dashboard/project/view-file', {
+      params: {
+        filename: processDetail.value.pm2_env.pm_err_log_path,
+      }
+    })
   }
 
   return {
     processDetail,
     processDetailVisible,
     showProcessDetail,
-    showProcessLog
+    showProcessLog,
+    showProcessError,
   }
 }
 
