@@ -1,7 +1,6 @@
-const { ipcMain, dialog, shell } = require('electron')
+const { ipcMain, dialog, shell, BrowserWindow } = require('electron')
 const path = require('path')
 const services = require('../services')
-const { getWindow } = require('./window')
 const { createSchedule } = require('./schedule')
 
 function regist(method, url, action) {
@@ -56,7 +55,7 @@ function initIPC() {
   })
 
   regist('GET', '/dashboard/project/select-directory', async (event, query) => {
-    const res = await dialog.showOpenDialog(getWindow(), {
+    const res = await dialog.showOpenDialog(BrowserWindow.getAllWindows()[0], {
       title: query.title || '选择目录',
       properties: [
         'openDirectory',
@@ -71,7 +70,7 @@ function initIPC() {
   })
 
   regist('GET', '/dashboard/project/select-file', async (event, query) => {
-    const res = await dialog.showOpenDialog(getWindow(), {
+    const res = await dialog.showOpenDialog(BrowserWindow.getAllWindows()[0], {
       title: query.title || '选择文件',
       defaultPath: query.dir,
       properties: [
@@ -130,10 +129,16 @@ function initIPC() {
 
   regist('GET', '/dashboard/project/view-file', (event, query) => {
     if (process.platform === 'darwin') {
-      getWindow().previewFile(query.filename)
-    } else {
-      shell.openPath(query.filename)
+      const win = BrowserWindow.getAllWindows()[0]
+
+      if (win) {
+        win.previewFile(query.filename)
+
+        return
+      }
     }
+
+    shell.openPath(query.filename)
   })
 }
 

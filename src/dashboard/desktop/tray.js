@@ -3,10 +3,15 @@ const { Tray, Menu, app } = require('electron')
 
 let tray = null
 
-function initTray() {
+function initTray({ onActive }) {
   tray = new Tray(path.join(__dirname, '../../asserts/tray.png'))
 
   const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '显示主窗口',
+      type: 'normal',
+      click: onActive
+    },
     {
       label: '退出',
       type: 'normal',
@@ -17,6 +22,8 @@ function initTray() {
   ])
 
   tray.setContextMenu(contextMenu)
+
+  tray.on('double-click', onActive)
 }
 
 module.exports = {

@@ -41,7 +41,7 @@ contextBridge.exposeInMainWorld('projectApi', {
       }
     })
 
-    return function close() {
+    function close() {
       reply.then((res) => {
         if (res.success) {
           info('[listen close]', url)
@@ -51,5 +51,9 @@ contextBridge.exposeInMainWorld('projectApi', {
         }
       })
     }
+
+    window.addEventListener('beforeunload', close)
+
+    return close
   }
 })

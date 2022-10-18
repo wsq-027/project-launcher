@@ -18,11 +18,6 @@ function createWindow() {
   clearSchedule()
 }
 
-function getWindow() {
-  return win
-}
-
 module.exports = {
   createWindow,
-  getWindow,
 }
