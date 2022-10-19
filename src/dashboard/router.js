@@ -116,6 +116,12 @@ router.get('/project/log', async (req, res) => {
   })
 })
 
+
+process.on('beforeExit', async (code) => {
+  await services.onExit()
+  process.exit(code)
+})
+
 router.use('/', express.static(path.join(__dirname, './views')))
 
 module.exports = router

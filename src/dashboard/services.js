@@ -92,12 +92,8 @@ function unsubscribeProxyLog(listener) {
   ps.logs.unsubscribe(listener)
 }
 
-let hasClear = false
 async function onExit() {
   console.log('on exit')
-  if (hasClear) {
-    return
-  }
 
   for (const project of store) {
     if (project.isLocal && project.isStart) {
@@ -108,29 +104,7 @@ async function onExit() {
   console.log('remove all project')
 
   pm.disconnect()
-
-  hasClear = true
 }
-
-if (isDesktop) {
-  const {app} = require('electron')
-
-  app.once('before-quit', async (event) => {
-    if (!hasClear) {
-      event.preventDefault()
-    }
-
-    await onExit()
-
-    app.quit()
-  })
-} else {
-  process.on('beforeExit', async (code) => {
-    await onExit()
-    process.exit(code)
-  })
-}
-
 
 module.exports = {
   addProject,
@@ -141,4 +115,5 @@ module.exports = {
   detailProject,
   subscribeProxyLog,
   unsubscribeProxyLog,
+  onExit,
 }
