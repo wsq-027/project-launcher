@@ -1,26 +1,26 @@
 const fs = require('fs')
 const server = require('./src/core/proxy-server')
-const { isDesktop, getUserPath, tryRun } = require('./src/core/common')
+const { isDesktop, getUserPath } = require('./src/core/common')
+const client = isDesktop ? require('./src/clients/desktop/index') : require('./src/clients/node/index')
 
-if (!isDesktop) {
-  const dashboard = require('./src/server/router')
-  server.app.use('/dashboard', dashboard)
+function tryGet(fn, defaultValue) {
+  try {
+    return fn()
+  } catch (e) {
+    return defaultValue
+  }
 }
 
 try {
-  const port = tryRun(() => fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}))?.toString?.() ?? 3335
+  client.onStart()
+
+  const port = tryGet(() => fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}).toString(), 3335)
   server.start(port)
+
+  client.afterStart(port)
 } catch (e) {
-  if (isDesktop) {
-    const { app } = require('electron')
-    app.quit()
-  }
+  client.onError()
 
   throw e
 }
 
-if (isDesktop) {
-  require('./src/desktop/index')
-} else {
-  console.log(`Server start on http://127.0.0.1:${port}/dashboard`)
-}

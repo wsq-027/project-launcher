@@ -4,7 +4,7 @@ const { Tray, Menu, app } = require('electron')
 let tray = null
 
 function initTray({ onActive }) {
-  tray = new Tray(path.join(__dirname, '../asserts/tray.png'))
+  tray = new Tray(path.join(__dirname, '../../asserts/tray.png'))
 
   const contextMenu = Menu.buildFromTemplate([
     {

@@ -1,7 +1,7 @@
 const express = require('express')
 const Emitter = require('events')
 const path = require('path')
-const core = require('../core/index')
+const core = require('../../core/index')
 
 const router = express.Router()
 

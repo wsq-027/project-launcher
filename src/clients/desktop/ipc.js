@@ -1,6 +1,6 @@
 const { ipcMain, dialog, shell, BrowserWindow } = require('electron')
-const path = require('path')
-const core = require('../core/index')
+const p = require('path')
+const core = require('../../core/index')
 const { createSchedule } = require('./schedule')
 
 function regist(method, url, action) {
@@ -88,7 +88,7 @@ function initIPC() {
     return {
       success: true,
       path,
-      relativePath: query.dir ? path.relative(query.dir, path) : ''
+      relativePath: query.dir ? p.relative(query.dir, path) : ''
     }
   })
 
