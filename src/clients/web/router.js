@@ -122,6 +122,6 @@ process.on('beforeExit', async (code) => {
   process.exit(code)
 })
 
-router.use('/', express.static(path.join(__dirname, './views')))
+router.use('/', express.static(path.join(__dirname, '../../views/dashboard')))
 
 module.exports = router

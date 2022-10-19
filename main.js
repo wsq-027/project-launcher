@@ -1,7 +1,7 @@
 const fs = require('fs')
 const server = require('./src/core/proxy-server')
 const { isDesktop, getUserPath } = require('./src/core/common')
-const client = isDesktop ? require('./src/clients/desktop/index') : require('./src/clients/node/index')
+const client = isDesktop ? require('./src/clients/desktop/index') : require('./src/clients/web/index')
 
 function tryGet(fn, defaultValue) {
   try {
