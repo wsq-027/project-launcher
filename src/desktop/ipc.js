@@ -1,6 +1,6 @@
 const { ipcMain, dialog, shell, BrowserWindow } = require('electron')
 const path = require('path')
-const services = require('../services')
+const core = require('../core/index')
 const { createSchedule } = require('./schedule')
 
 function regist(method, url, action) {
@@ -28,29 +28,29 @@ function regist(method, url, action) {
 
 function initIPC() {
   regist('PUT', '/dashboard/project', async (event, data) => {
-    return await services.addProject(data)
+    return await core.addProject(data)
   })
 
   regist('DELETE', '/dashboard/project', async (event, query) => {
-    await services.removeProject({
+    await core.removeProject({
       name: query.name,
     })
   })
 
   regist('GET', '/dashboard/project/start', async (event, query) => {
-    await services.startProject({
+    await core.startProject({
       name: query.name,
     })
   })
 
   regist('GET', '/dashboard/project/stop', async (event, query) => {
-    await services.stopProject({
+    await core.stopProject({
       name: query.name,
     })
   })
 
   regist('GET', '/dashboard/project/all', async (event) => {
-    const list = await services.listProject()
+    const list = await core.listProject()
     return list
   })
 
@@ -98,7 +98,7 @@ function initIPC() {
     const schedule = createSchedule({
       idPrefix: replyUrl + '?id=',
       async callback() {
-        const data = await services.detailProject({ name: query.name })
+        const data = await core.detailProject({ name: query.name })
         event.sender.send('REPLY:' + schedule.id, data)
       },
       delay: 2000
@@ -118,10 +118,10 @@ function initIPC() {
       event.sender.send('REPLY:' + replyUrl, logData)
     }
 
-    services.subscribeProxyLog(listener)
+    core.subscribeProxyLog(listener)
 
     ipcMain.handleOnce('CLOSE:' + replyUrl, () => {
-      services.unsubscribeProxyLog(listener)
+      core.unsubscribeProxyLog(listener)
     })
 
     return replyUrl

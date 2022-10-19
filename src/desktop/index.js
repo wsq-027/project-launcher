@@ -2,7 +2,7 @@ const { app } = require('electron')
 const { initIPC } = require('./ipc')
 const { createWindow, activeWindow } = require('./window')
 const { initTray } = require('./tray')
-const services = require('../services')
+const core = require('../core/index')
 
 app.whenReady().then(() => {
   initIPC()
@@ -25,7 +25,7 @@ app.once('before-quit', async (event) => {
     event.preventDefault()
   }
 
-  await services.onExit()
+  await core.onExit()
 
   hasClear = true
 

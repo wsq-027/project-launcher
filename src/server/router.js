@@ -1,7 +1,7 @@
 const express = require('express')
 const Emitter = require('events')
 const path = require('path')
-const services = require('./services')
+const core = require('../core/index')
 
 const router = express.Router()
 
@@ -54,35 +54,35 @@ function createSSEServer(req, res) {
 }
 
 registRouter(router.put, '/project', async (req, res) => {
-  return await services.addProject(req.body)
+  return await core.addProject(req.body)
 })
 
 registRouter(router.delete, '/project', async (req, res) => {
-  await services.removeProject({
+  await core.removeProject({
     name: req.query.name,
   })
 })
 
 registRouter(router.get, '/project', async (req, res) => {
-  return await services.detailProject({
+  return await core.detailProject({
     name: req.query.name
   })
 })
 
 registRouter(router.get, '/project/start', async (req, res) => {
-  await services.startProject({
+  await core.startProject({
     name: req.query.name,
   })
 })
 
 registRouter(router.get, '/project/stop', async (req, res) => {
-  await services.stopProject({
+  await core.stopProject({
     name: req.query.name,
   })
 })
 
 registRouter(router.get, '/project/all', async (req, res) => {
-  return await services.listProject()
+  return await core.listProject()
 })
 
 router.get('/project/detail', (req, res) => {
@@ -90,7 +90,7 @@ router.get('/project/detail', (req, res) => {
 
   let timeoutFlag
   const refresh = async () => {
-    const data = await services.detailProject({ name: req.query.name })
+    const data = await core.detailProject({ name: req.query.name })
     sse.write(JSON.stringify(data))
     timeoutFlag = setTimeout(refresh, 2000)
   }
@@ -118,7 +118,7 @@ router.get('/project/log', async (req, res) => {
 
 
 process.on('beforeExit', async (code) => {
-  await services.onExit()
+  await core.onExit()
   process.exit(code)
 })
 

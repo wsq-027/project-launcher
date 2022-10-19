@@ -1,22 +1,26 @@
 const fs = require('fs')
-const server = require('./src/proxy-server')
-const { isDesktop, getUserPath, tryRun } = require('./src/common')
+const server = require('./src/core/proxy-server')
+const { isDesktop, getUserPath, tryRun } = require('./src/core/common')
 
-if (isDesktop) {
-  require('./src/dashboard/desktop/index')
-} else {
-  const dashboard = require('./src/dashboard/router')
+if (!isDesktop) {
+  const dashboard = require('./src/server/router')
   server.app.use('/dashboard', dashboard)
 }
 
-const port = tryRun(() => fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}))?.toString?.() ?? 3335
-server.start(port)
+try {
+  const port = tryRun(() => fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}))?.toString?.() ?? 3335
+  server.start(port)
+} catch (e) {
+  if (isDesktop) {
+    const { app } = require('electron')
+    app.quit()
+  }
 
-if (!isDesktop) {
-  console.log(`Server start on http://127.0.0.1:${port}/dashboard`)
+  throw e
 }
 
-// server.addProxy('/medical', 'http://127.0.0.1:3331'))
-// server.addProxy('/pay', 'http://127.0.0.1:3334')
-// server.addProxy('/', 'http://127.0.0.1:3330')
-// server.addProxy('/', 'https://health.dev.zoenet.cn')
+if (isDesktop) {
+  require('./src/desktop/index')
+} else {
+  console.log(`Server start on http://127.0.0.1:${port}/dashboard`)
+}

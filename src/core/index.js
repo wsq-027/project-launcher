@@ -1,7 +1,6 @@
-const pm = require('../process-manager')
-const ps = require('../proxy-server')
-const store = require('../project-store')
-const { isDesktop } = require('../common')
+const pm = require('./process-manager')
+const ps = require('./proxy-server')
+const store = require('./project-store')
 
 async function addProject({ name, dir, urlPrefix, proxyHost, isLocal, script }) {
   if (!script) {
