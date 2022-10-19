@@ -14,6 +14,8 @@
     "ls": "pm2 ls",
     "stop": "pm2 stop all",
     "package": "electron-forge package",
+    "package:win": "electron-forge package --arch x64 --platform win32",
+    "make:win": "electron-forge make --arch x64 --platform win32",
     "make": "electron-forge make"
   },
   "devDependencies": {
@@ -26,12 +28,14 @@
   },
   "config": {
     "forge": {
-      "packagerConfig": {},
+      "packagerConfig": {
+        "icon": "./asserts/icon"
+      },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": ""
+            "name": "projects-launcher"
           }
         },
         {
@@ -42,7 +46,11 @@
         },
         {
           "name": "@electron-forge/maker-deb",
-          "config": {}
+          "config": {
+            "options": {
+              "icon": "./asserts/icon.png"
+            }
+          }
         },
         {
           "name": "@electron-forge/maker-rpm",
