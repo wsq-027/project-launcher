@@ -82,7 +82,7 @@ function removeProxy(path) {
 }
 
 function start(port) {
-  app.listen(port)
+  return app.listen(port)
 }
 
 module.exports = {

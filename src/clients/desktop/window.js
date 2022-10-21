@@ -25,6 +25,8 @@ function activeWindow() {
     win.show()
   } else if (win.isMinimized()) {
     win.restore()
+  } else {
+    win.focus()
   }
 }
 

@@ -15,12 +15,12 @@ try {
   client.onStart()
 
   const port = tryGet(() => fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}).toString(), 3335)
-  server.start(port)
+  const instance = server.start(port)
 
-  client.afterStart(port)
+  instance.addListener('error', client.onError)
+
+  client.afterStart({port})
 } catch (e) {
-  client.onError()
-
-  throw e
+  client.onError(e)
 }
 

@@ -1,10 +1,20 @@
-const { app } = require('electron')
+const { app, dialog } = require('electron')
 const { initIPC } = require('./ipc')
 const { createWindow, activeWindow } = require('./window')
 const { initTray } = require('./tray')
 const core = require('../../core/index')
 
 function onStart() {
+  const instanceLock = app.requestSingleInstanceLock()
+
+  if (!instanceLock) {
+    app.quit()
+  } else {
+    app.on('second-instance', () => {
+      activeWindow()
+    })
+  }
+
   app.whenReady().then(() => {
     initIPC()
     createWindow()
@@ -36,8 +46,12 @@ function onStart() {
 
 module.exports = {
   onStart,
-  onError() {
-    app.quit()
+  onError(e) {
+    console.error(e)
+
+    dialog.showErrorBox('Error', e.message)
+
+      app.quit()
   },
-  afterStart() {},
+  afterStart({port}) {},
 }
