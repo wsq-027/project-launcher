@@ -1,57 +1,57 @@
 const { app, dialog } = require('electron')
+const BaseClient = require('../base')
 const { initIPC } = require('./ipc')
 const { createWindow, activeWindow } = require('./window')
 const { initTray } = require('./tray')
-const core = require('../../core/index')
 
-function onStart() {
-  const instanceLock = app.requestSingleInstanceLock()
+module.exports = class DesktopClient extends BaseClient {
+  start() {
+    const instanceLock = app.requestSingleInstanceLock()
 
-  if (!instanceLock) {
-    app.quit()
-  } else {
-    app.on('second-instance', () => {
-      activeWindow()
+    if (!instanceLock) {
+      app.quit()
+    } else {
+      app.on('second-instance', () => {
+        activeWindow()
+      })
+    }
+
+    app.whenReady().then(() => {
+      initIPC(this.core)
+      createWindow()
+      initTray({
+        onActive: activeWindow
+      })
+
+      app.on('activate', activeWindow)
+    })
+
+    app.on('window-all-closed', () => {
+      console.log('win all close')
+      // app.quit()
+    })
+
+    let hasClear = false
+    app.once('before-quit', async (event) => {
+      if (!hasClear) {
+        event.preventDefault()
+      }
+
+      await this.core.exit()
+
+      hasClear = true
+
+      app.quit()
     })
   }
 
-  app.whenReady().then(() => {
-    initIPC()
-    createWindow()
-    initTray({
-      onActive: activeWindow
-    })
-
-    app.on('activate', activeWindow)
-  })
-
-  app.on('window-all-closed', () => {
-    console.log('win all close')
-    // app.quit()
-  })
-
-  let hasClear = false
-  app.once('before-quit', async (event) => {
-    if (!hasClear) {
-      event.preventDefault()
-    }
-
-    await core.onExit()
-
-    hasClear = true
-
-    app.quit()
-  })
-}
-
-module.exports = {
-  onStart,
-  onError(e) {
+  throws(e) {
     console.error(e)
 
     dialog.showErrorBox('Error', e.message)
 
-      app.quit()
-  },
-  afterStart({port}) {},
+    app.quit()
+  }
+
+  afterStart() {}
 }

@@ -47,7 +47,7 @@ function _sseApi(url, { params = {}, callback } = {}) {
 export async function api(url, { data, method = 'GET', params = {}} = {}) {
   try {
     if (isDesktop) {
-      return window.projectApi.invoke({method, url, data: { ...data, ...params }})
+      return await window.projectApi.invoke({method, url, data: { ...data, ...params }})
     }
 
     return _api(url, { data, method, params })

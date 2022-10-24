@@ -68,6 +68,4 @@ class ProjectStore {
   }
 }
 
-const store = new ProjectStore()
-
-module.exports = store
+module.exports = ProjectStore

@@ -13,57 +13,54 @@ const manager = {
   disconnect: util.promisify(pm2.disconnect).bind(pm2),
 }
 
-let hasConnect = false
-async function connect() {
-  if (!hasConnect) {
-    await manager.connect()
-
-    hasConnect = true
-  }
-}
-
 function resolvePathFromAbsoluteToRelateive(dir) {
   return path.relative(process.cwd(), dir.replace('~', process.env.HOME || process.env.USERPROFILE))
 }
 
-async function addProcess(projectName, projectDir, projectScript) {
-  await connect()
+module.exports = class ProcessManager {
+  constructor() {
+    this._hasConnect = false
+  }
 
-  const proc = await manager.start({
-    name: projectName,
-    script: projectScript,
-    cwd: resolvePathFromAbsoluteToRelateive(projectDir),
-    error_file: path.join(getUserPath(), `./logs/${projectName}_error.log`),
-    out_file: path.join(getUserPath(), `./logs/${projectName}_out.log`),
-    pid_file: path.join(getUserPath(), `./logs/${projectName}.pid`),
-    exec_mode: 'cluster',
-  })
+  async connect() {
+    if (!this._hasConnect) {
+      await manager.connect()
 
-  return proc
-}
+      this._hasConnect = true
+    }
+  }
 
-async function removeProcess(projectName) {
-  await connect()
+  async addProcess(projectName, projectDir, projectScript) {
+    await this.connect()
 
-  await manager.stop(projectName)
+    const proc = await manager.start({
+      name: projectName,
+      script: projectScript,
+      cwd: resolvePathFromAbsoluteToRelateive(projectDir),
+      error_file: path.join(getUserPath(), `./logs/${projectName}_error.log`),
+      out_file: path.join(getUserPath(), `./logs/${projectName}_out.log`),
+      pid_file: path.join(getUserPath(), `./logs/${projectName}.pid`),
+      exec_mode: 'cluster',
+    })
 
-  await manager.delete(projectName)
-}
+    return proc
+  }
+  async removeProcess(projectName) {
+    await this.connect()
 
-async function detailProcess(name) {
-  const procs = await manager.describe(name)
+    await manager.stop(projectName)
 
-  return procs[0]
-}
+    await manager.delete(projectName)
+  }
 
-function disconnect() {
-  hasConnect = false
-  pm2.disconnect()
-}
+  async detailProcess(name) {
+    const procs = await manager.describe(name)
 
-module.exports = {
-  addProcess,
-  removeProcess,
-  detailProcess,
-  disconnect,
+    return procs[0]
+  }
+
+  disconnect() {
+    this.hasConnect = false
+    pm2.disconnect()
+  }
 }

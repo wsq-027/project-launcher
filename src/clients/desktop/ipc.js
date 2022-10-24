@@ -1,6 +1,5 @@
 const { ipcMain, dialog, shell, BrowserWindow } = require('electron')
 const p = require('path')
-const core = require('../../core/index')
 const { createSchedule } = require('./schedule')
 
 function regist(method, url, action) {
@@ -26,7 +25,7 @@ function regist(method, url, action) {
   })
 }
 
-function initIPC() {
+function initIPC(core) {
   regist('PUT', '/dashboard/project', async (event, data) => {
     return await core.addProject(data)
   })
@@ -118,10 +117,10 @@ function initIPC() {
       event.sender.send('REPLY:' + replyUrl, logData)
     }
 
-    core.subscribeProxyLog(listener)
+    core.ps.logs.on('log', listener)
 
     ipcMain.handleOnce('CLOSE:' + replyUrl, () => {
-      core.unsubscribeProxyLog(listener)
+      core.ps.logs.off('log', listener)
     })
 
     return replyUrl

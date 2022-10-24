@@ -53,75 +53,69 @@ function createSSEServer(req, res) {
   }
 }
 
-registRouter(router.put, '/project', async (req, res) => {
-  return await core.addProject(req.body)
-})
-
-registRouter(router.delete, '/project', async (req, res) => {
-  await core.removeProject({
-    name: req.query.name,
+module.exports = function createDashboard(core) {
+  registRouter(router.put, '/project', async (req, res) => {
+    return await core.addProject(req.body)
   })
-})
 
-registRouter(router.get, '/project', async (req, res) => {
-  return await core.detailProject({
-    name: req.query.name
+  registRouter(router.delete, '/project', async (req, res) => {
+    await core.removeProject({
+      name: req.query.name,
+    })
   })
-})
 
-registRouter(router.get, '/project/start', async (req, res) => {
-  await core.startProject({
-    name: req.query.name,
+  registRouter(router.get, '/project', async (req, res) => {
+    return await core.detailProject({
+      name: req.query.name
+    })
   })
-})
 
-registRouter(router.get, '/project/stop', async (req, res) => {
-  await core.stopProject({
-    name: req.query.name,
+  registRouter(router.get, '/project/start', async (req, res) => {
+    await core.startProject({
+      name: req.query.name,
+    })
   })
-})
 
-registRouter(router.get, '/project/all', async (req, res) => {
-  return await core.listProject()
-})
-
-router.get('/project/detail', (req, res) => {
-  const sse = createSSEServer(req, res)
-
-  let timeoutFlag
-  const refresh = async () => {
-    const data = await core.detailProject({ name: req.query.name })
-    sse.write(JSON.stringify(data))
-    timeoutFlag = setTimeout(refresh, 2000)
-  }
-
-  refresh()
-
-  sse.once('close', () => {
-    clearTimeout(timeoutFlag)
+  registRouter(router.get, '/project/stop', async (req, res) => {
+    await core.stopProject({
+      name: req.query.name,
+    })
   })
-})
 
-router.get('/project/log', async (req, res) => {
-  const sse = createSSEServer(req, res)
+  registRouter(router.get, '/project/all', async (req, res) => {
+    return await core.listProject()
+  })
 
-  sse.write(new Date())
+  router.get('/project/detail', (req, res) => {
+    const sse = createSSEServer(req, res)
 
-  const interval = setInterval(() => {
+    let timeoutFlag
+    const refresh = async () => {
+      const data = await core.detailProject({ name: req.query.name })
+      sse.write(JSON.stringify(data))
+      timeoutFlag = setTimeout(refresh, 2000)
+    }
+
+    refresh()
+
+    sse.once('close', () => {
+      clearTimeout(timeoutFlag)
+    })
+  })
+
+  router.get('/project/log', async (req, res) => {
+    const sse = createSSEServer(req, res)
+
     sse.write(new Date())
-  }, 3000)
 
-  sse.once('close', () => {
-    clearInterval(interval)
+    const interval = setInterval(() => {
+      sse.write(new Date())
+    }, 3000)
+
+    sse.once('close', () => {
+      clearInterval(interval)
+    })
   })
-})
 
-
-process.on('beforeExit', async (code) => {
-  await core.onExit()
-  process.exit(code)
-})
-
-router.use('/', express.static(path.join(__dirname, '../../views/dashboard')))
-
-module.exports = router
+  router.use('/', express.static(path.join(__dirname, '../../views/dashboard')))
+}
