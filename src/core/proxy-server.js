@@ -25,11 +25,12 @@ module.exports = class ProxyServer {
   }
 
   _createProxy(basePath, host) {
+    const { logs } = this
     const _proxy = proxy(host, {
       proxyReqPathResolver(req) {
         const url = (basePath === '/' ? '' : basePath) + req.url
 
-        self.logs.log(req, host, url)
+        logs.log(req, host, url)
 
         return url
       },
