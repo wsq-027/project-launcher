@@ -13,7 +13,24 @@ function tryGet(fn, defaultValue) {
   }
 }
 
-class Core extends Emitter {
+class ReadyHandler extends Emitter {
+  constructor() {
+    super()
+    this._readyPromise = new Promise((resolve) => {
+      this.once('ready', resolve)
+    })
+  }
+
+  addReady(fn) {
+    this.emit('ready', fn)
+  }
+
+  async ready() {
+    await this._readyPromise
+  }
+}
+
+class Core extends ReadyHandler {
   constructor() {
     super()
     this.pm = new ProcessManager
@@ -26,9 +43,25 @@ class Core extends Emitter {
     const server = this.ps.start(port)
 
     server.addListener('error', (err) => this.emit('error', err))
+
+    this.addReady(async () => {
+      const list = await this.pm.listProcess()
+
+      for (const { name } of list) {
+        if (this.store.has(name)) {
+          const project = this.store.get(name)
+          project.isStart = true
+          project.isLocal = true
+
+          this.store.update(name, project)
+        }
+      }
+    })
   }
 
   async addProject({ name, dir, urlPrefix, proxyHost, isLocal, script }) {
+    await this.ready()
+
     if (!script) {
       script = './bin/www'
     }
@@ -49,6 +82,8 @@ class Core extends Emitter {
   }
 
   async startProject({name}) {
+    await this.ready()
+
     const project = this.store.get(name)
 
     if (project.isStart) {
@@ -66,6 +101,8 @@ class Core extends Emitter {
   }
 
   async stopProject({name}) {
+    await this.ready()
+
     const project = this.store.get(name)
 
     if (!project.isStart) {
@@ -83,6 +120,8 @@ class Core extends Emitter {
   }
 
   async removeProject({name}) {
+    await this.ready()
+
     const project = this.store.get(name)
 
     if (project.isStart) {
@@ -93,10 +132,14 @@ class Core extends Emitter {
   }
 
   async listProject() {
+    await this.ready()
+
     return [...this.store]
   }
 
   async detailProject({ name }) {
+    await this.ready()
+
     const project = this.store.get(name)
 
     if (!project.isStart) {

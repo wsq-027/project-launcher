@@ -23,7 +23,7 @@ export declare type ProjectItem = {
 
 type ProjectQuery = { name: ProjectName }
 
-export declare class Core extends Emitter {
+export declare class Core {
   pm: ProcessManager
   ps: ProxyServer
   store: ProjectStore
@@ -44,6 +44,7 @@ export declare class ProcessManager {
   addProcess(name: ProjectName, projectDir: string, projectScript: string): Promise<Proc>
   removeProcess(name: ProjectName): Promise<void>
   detailProcess(name: ProjectName): Promise<ProcessDescription>
+  listProcess(): Promise<ProcessDescription[]>
   disconnect(): void
 }
 

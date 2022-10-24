@@ -59,6 +59,10 @@ module.exports = class ProcessManager {
     return procs[0]
   }
 
+  async listProcess() {
+    return await manager.list()
+  }
+
   disconnect() {
     this.hasConnect = false
     pm2.disconnect()
