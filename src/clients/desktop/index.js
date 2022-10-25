@@ -1,4 +1,4 @@
-const { app, dialog } = require('electron')
+const { app, dialog, Menu } = require('electron')
 const BaseClient = require('../base')
 const { initIPC } = require('./ipc')
 const { createWindow, activeWindow } = require('./window')
@@ -17,6 +17,7 @@ module.exports = class DesktopClient extends BaseClient {
     }
 
     app.whenReady().then(() => {
+      Menu.setApplicationMenu(null)
       initIPC(this.core)
       createWindow()
       initTray({

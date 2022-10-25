@@ -2,6 +2,9 @@ const path = require('path')
 const { BrowserWindow } = require('electron')
 const { clearSchedule } = require('./schedule')
 
+/**
+ * @type {BrowserWindow}
+ */
 let win
 
 function createWindow() {
@@ -21,12 +24,10 @@ function createWindow() {
 function activeWindow() {
   if (!win || win.isDestroyed()) {
     createWindow()
-  } else if (!win.isVisible()) {
-    win.show()
   } else if (win.isMinimized()) {
     win.restore()
   } else {
-    win.focus()
+    win.show()
   }
 }
 
