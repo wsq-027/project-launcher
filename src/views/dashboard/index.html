@@ -199,10 +199,20 @@
     <el-dialog v-model="proxyLogVisible" title="代理日志" fullscreen align-center>
       <ul v-if="proxyLogs.length" class="proxy-log" id="proxy-log">
         <li class="proxy-log-item" v-for="log in proxyLogs" :key="log.timestamp">
-          <span class="log-time">{{filterDate(log.timestamp)}}</span>
-          <span class="log-name" :title="log.proxy">{{log.proxy}}</span>
-          <span class="log-from" :title="log.from">{{log.from}}</span>
-          <span class="log-to" :title="log.to">{{log.to}}</span>
+          <span class="log-time"><el-tag>{{log.type}}</el-tag>{{filterDate(log.data.timestamp)}}</span>
+          <span class="log-name" :title="log.proxy">{{log.data.proxy}}</span>
+
+          <template v-if="log.type === 'log'">
+            <span class="log-target" :title="log.target">{{log.data.target}}</span>
+          </template>
+
+          <template v-if="log.type === 'response'">
+            <pre class="log-response" :title="log.data.toString()">{{log.data.data}}</pre>
+          </template>
+
+          <template v-if="log.type === 'error'">
+            <pre class="log-error">{{log.data.error}}</pre>
+          </template>
         </li>
       </ul>
 

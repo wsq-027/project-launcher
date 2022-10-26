@@ -17,7 +17,10 @@ module.exports = class DesktopClient extends BaseClient {
     }
 
     app.whenReady().then(() => {
-      Menu.setApplicationMenu(null)
+      if (app.isPackaged) {
+        Menu.setApplicationMenu(null)
+      }
+
       initIPC(this.core)
       createWindow()
       initTray({

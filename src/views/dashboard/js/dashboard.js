@@ -233,7 +233,6 @@ function useProxyLog() {
 
         nextTick(() => {
           const el = document.getElementById('proxy-log')
-          console.log('next tick', el)
           el?.scrollTo({
             top: el?.scrollHeight,
           })

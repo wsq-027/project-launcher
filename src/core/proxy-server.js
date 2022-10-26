@@ -3,17 +3,29 @@ const proxy = require('express-http-proxy')
 const Emitter = require('events')
 
 class ProxyLogs extends Emitter {
-  log(req, host, url) {
+  log({ id, target }) {
     this.emit('log', {
-      proxy: req.method + ' ' + url,
-      from: req.protocol + '://' + req.headers.host + req.originalUrl,
-      to: host + url,
+      proxy: id,
+      target,
       timestamp: Date.now(),
     })
   }
 
-  error(err) {
-    this.emit('err', err)
+  response({ id, data }) {
+    this.emit('response', {
+      proxy: id,
+      data,
+      timestamp: Date.now(),
+    })
+  }
+
+  error({ id, error }) {
+    console.error(error)
+    this.emit('err', {
+      proxy: id,
+      error,
+      timestamp: Date.now(),
+    })
   }
 }
 
@@ -26,23 +38,52 @@ module.exports = class ProxyServer {
 
   _createProxy(basePath, host) {
     const { logs } = this
+
+    const getUrl = (req) => {
+      const _basePath = basePath === '/' ? '' : basePath
+      const url = _basePath + req.url
+
+      return {
+        url,
+        id: req.method + ' ' + url
+      }
+    }
+
     const _proxy = proxy(host, {
       proxyReqPathResolver(req) {
-        const url = (basePath === '/' ? '' : basePath) + req.url
+        const {url, id} = getUrl(req)
 
-        logs.log(req, host, url)
+        logs.log({
+          id,
+          target: host + url
+        })
 
         return url
       },
       proxyErrorHandler(err, res, next) {
-        console.error(err)
+        logs.error({
+          id: getUrl(res.req).id,
+          error: err
+        })
 
-        switch (err && err.code) {
-          case 'ECONNRESET':    { return res.status(405).send('504 became 405'); }
-          case 'ECONNREFUSED':  { return res.status(200).send('gotcher back'); }
-          default:              { next(err); }
-        }
+        next(err)
+
+        // switch (err && err.code) {
+        //   case 'ECONNRESET':    { return res.status(405).send('504 became 405'); }
+        //   case 'ECONNREFUSED':  { return res.status(200).send('gotcher back'); }
+        //   default:              { next(err); }
+        // }
       },
+      userResDecorator(proxyRes, proxyResData, userReq) {
+        if (proxyRes.headers['content-type'].includes('json')) {
+          logs.response({
+            id: getUrl(userReq).id,
+            data: proxyResData.toString('utf8'),
+          })
+        }
+
+        return proxyResData
+      }
     })
 
     _proxy.path = basePath

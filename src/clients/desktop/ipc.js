@@ -113,14 +113,24 @@ function initIPC(core) {
     const id = String(new Date)
     const replyUrl = '/dashbaord/project/proxy-log?id=' + id
 
-    const listener = (logData) => {
-      event.sender.send('REPLY:' + replyUrl, logData)
+    const logListener = (logData) => {
+      event.sender.send('REPLY:' + replyUrl, { type: 'log', data: logData})
+    }
+    const responseListener = (resData) => {
+      event.sender.send('REPLY:' + replyUrl, { type: 'response', data: resData })
+    }
+    const errorListener = (error) => {
+      event.sender.send('REPLY:' + replyUrl, { type: 'error', data: error})
     }
 
-    core.ps.logs.on('log', listener)
+    core.ps.logs.on('log', logListener)
+    core.ps.logs.on('response', responseListener)
+    core.ps.logs.on('error', errorListener)
 
     ipcMain.handleOnce('CLOSE:' + replyUrl, () => {
-      core.ps.logs.off('log', listener)
+      core.ps.logs.off('log', logListener)
+      core.ps.logs.off('response', responseListener)
+      core.ps.logs.off('error', errorListener)
     })
 
     return replyUrl

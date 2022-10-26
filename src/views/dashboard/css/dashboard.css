@@ -35,8 +35,9 @@ body {
 }
 
 .log-name,
-.log-from,
-.log-to {
+.log-target,
+.log-response,
+.log-error {
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -44,14 +45,9 @@ body {
   margin-top: 5px;
 }
 
-.log-from::before {
-  content: '[from] ';
-  color: red;
-}
-
-.log-to::before {
-  content: '[to]    ';
-  color: green;
+.log-response,
+.log-error {
+  white-space: normal;
 }
 
 .proxy-log {
