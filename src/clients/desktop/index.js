@@ -52,7 +52,7 @@ module.exports = class DesktopClient extends BaseClient {
   throws(e) {
     console.error(e)
 
-    dialog.showErrorBox('Error', e.message)
+    dialog.showErrorBox('Error', e.stack)
 
     app.quit()
   }
