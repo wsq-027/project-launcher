@@ -1,4 +1,4 @@
-import {autoClose, gradient, isDesktop} from './utils.js'
+import {autoClose, gradient} from './utils.js'
 import {DEFAULT_PROJECT} from './constants.js'
 
 import {api, apiStream} from './api.js'
@@ -140,29 +140,25 @@ function useNewProject({ getProjectList }) {
   }
 
   async function onDirectory() {
-    if (isDesktop) {
-      const res = await api('/dashboard/project/select-directory')
+    const res = await api('/dashboard/project/select-directory')
 
-      if (res.success) {
-        newProject.value.dir = res.directory
-      }
+    if (res.success) {
+      newProject.value.dir = res.directory
     }
   }
 
   async function onScriptFile() {
-    if (isDesktop) {
-      const res = await api('/dashboard/project/select-file', {
-        params: {
-          dir: newProject.value.dir
-        }
-      })
+    const res = await api('/dashboard/project/select-file', {
+      params: {
+        dir: newProject.value.dir
+      }
+    })
 
-      if (res.success) {
-        newProject.value.script = res.relativePath || res.path
+    if (res.success) {
+      newProject.value.script = res.relativePath || res.path
 
-        if (!newProject.value.dir) {
-          newProject.value.dir = res.path.substring(0, res.path.lastIndexOf('/'))
-        }
+      if (!newProject.value.dir) {
+        newProject.value.dir = res.path.substring(0, res.path.lastIndexOf('/'))
       }
     }
   }
@@ -267,7 +263,6 @@ const app = createApp({
       ...proxyLogModule,
       defaultProject: readonly(DEFAULT_PROJECT),
       gradient,
-      isDesktop,
       filterDate,
     }
   }

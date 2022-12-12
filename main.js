@@ -1,6 +1,5 @@
 const Core = require('./src/core')
-const { isDesktop } = require('./src/core/common')
-const Client = isDesktop ? require('./src/clients/desktop/index') : require('./src/clients/web/index')
+const Client = require('./src/clients/desktop/index')
 
 const core = new Core
 const client = new Client(core)

@@ -85,7 +85,7 @@
         <template v-if="newProject.isLocal">
           <el-form-item label="项目目录" prop="dir" required>
             <el-input v-model="newProject.dir">
-              <template v-if="isDesktop" #append>
+              <template #append>
                 <el-button size="small" @click="onDirectory" icon="FolderAdd" title="选择目录"></el-button>
               </template>
             </el-input>
@@ -93,7 +93,7 @@
 
           <el-form-item label="node执行文件" prop="script" required>
             <el-input v-model="newProject.script">
-              <template v-if="isDesktop" #append>
+              <template #append>
                 <el-button size="small" @click="onScriptFile" icon="DocumentAdd" title="选择文件"></el-button>
               </template>
             </el-input>

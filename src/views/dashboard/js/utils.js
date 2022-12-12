@@ -20,5 +20,3 @@ export function autoClose(closeReference, closeCallback) {
     }
   })
 }
-
-export const isDesktop = !!window.projectApi
