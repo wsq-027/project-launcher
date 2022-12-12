@@ -13,16 +13,16 @@ function tryGet(fn, defaultValue) {
   }
 }
 
-class ReadyHandler extends Emitter {
+class TaskReady extends Emitter {
   constructor() {
     super()
-    this._readyPromise = new Promise((resolve) => {
+    this._readyPromise = new Promise(resolve => {
       this.once('ready', resolve)
     })
   }
 
-  addReady(fn) {
-    this.emit('ready', fn)
+  addAsyncTask(task) {
+    this.emit('ready', task)
   }
 
   async ready() {
@@ -30,12 +30,13 @@ class ReadyHandler extends Emitter {
   }
 }
 
-class Core extends ReadyHandler {
+class Core extends Emitter {
   constructor() {
     super()
     this.pm = new ProcessManager
     this.ps = new ProxyServer
     this.store = new ProjectStore
+    this.initTask = new TaskReady()
   }
 
   init() {
@@ -44,7 +45,7 @@ class Core extends ReadyHandler {
 
     server.addListener('error', (err) => this.emit('error', err))
 
-    this.addReady(async () => {
+    this.initTask.addAsyncTask(async () => {
       const list = await this.pm.listProcess()
 
       for (const { name } of list) {
@@ -60,7 +61,7 @@ class Core extends ReadyHandler {
   }
 
   async addProject({ name, dir, urlPrefix, proxyHost, isLocal, script }) {
-    await this.ready()
+    await this.initTask.ready()
 
     if (!script) {
       script = './bin/www'
@@ -82,7 +83,7 @@ class Core extends ReadyHandler {
   }
 
   async startProject({name}) {
-    await this.ready()
+    await this.initTask.ready()
 
     const project = this.store.get(name)
 
@@ -101,7 +102,7 @@ class Core extends ReadyHandler {
   }
 
   async stopProject({name}) {
-    await this.ready()
+    await this.initTask.ready()
 
     const project = this.store.get(name)
 
@@ -120,7 +121,7 @@ class Core extends ReadyHandler {
   }
 
   async removeProject({name}) {
-    await this.ready()
+    await this.initTask.ready()
 
     const project = this.store.get(name)
 
@@ -132,13 +133,13 @@ class Core extends ReadyHandler {
   }
 
   async listProject() {
-    await this.ready()
+    await this.initTask.ready()
 
     return [...this.store]
   }
 
   async detailProject({ name }) {
-    await this.ready()
+    await this.initTask.ready()
 
     const project = this.store.get(name)
 
