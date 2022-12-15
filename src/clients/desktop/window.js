@@ -3,12 +3,12 @@ const { BrowserWindow } = require('electron')
 const { clearSchedule } = require('./schedule')
 
 /**
- * @type {BrowserWindow}
+ * @type {Record<string, BrowserWindow}
  */
-let win
+const winMap = {}
 
-function createWindow() {
-  win = new BrowserWindow({
+function createWindow(winId) {
+  const win = winMap[winId] = new BrowserWindow({
     width: 1000,
     height: 600,
     webPreferences: {
@@ -16,14 +16,15 @@ function createWindow() {
     },
   })
 
-  win.loadFile(path.join(__dirname, '../../views/dashboard/index.html'))
+  win.loadFile(path.join(__dirname, `../../views/${winId}/index.html`))
 
   clearSchedule()
 }
 
-function activeWindow() {
+function activeWindow(winId) {
+  const win = winMap[winId]
   if (!win || win.isDestroyed()) {
-    createWindow()
+    createWindow(winId)
   } else if (win.isMinimized()) {
     win.restore()
   } else {
@@ -31,7 +32,14 @@ function activeWindow() {
   }
 }
 
+function activeAllWindow() {
+  for (let winId in winMap) {
+    activeWindow(winId)
+  }
+}
+
 module.exports = {
   createWindow,
   activeWindow,
+  activeAllWindow,
 }

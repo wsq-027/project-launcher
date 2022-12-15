@@ -1,7 +1,7 @@
 const { app, dialog, Menu } = require('electron')
 const BaseClient = require('../base')
 const { initIPC } = require('./ipc')
-const { createWindow, activeWindow } = require('./window')
+const { createWindow, activeAllWindow } = require('./window')
 const { initTray } = require('./tray')
 
 module.exports = class DesktopClient extends BaseClient {
@@ -12,7 +12,7 @@ module.exports = class DesktopClient extends BaseClient {
       app.quit()
     } else {
       app.on('second-instance', () => {
-        activeWindow()
+        activeAllWindow()
       })
     }
 
@@ -22,12 +22,12 @@ module.exports = class DesktopClient extends BaseClient {
       }
 
       initIPC(this.core)
-      createWindow()
+      createWindow('dashboard')
       initTray({
-        onActive: activeWindow
+        onActive: activeAllWindow
       })
 
-      app.on('activate', activeWindow)
+      app.on('activate', activeAllWindow)
     })
 
     app.on('window-all-closed', () => {
