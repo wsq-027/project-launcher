@@ -3,63 +3,32 @@
   "version": "0.1",
   "main": "./main.js",
   "dependencies": {
+    "@element-plus/icons-vue": "^2.0.10",
     "electron-squirrel-startup": "^1.0.0",
+    "element-plus": "^2.2.27",
     "express": "^4.18.1",
     "express-http-proxy": "^1.6.3",
     "node-pty": "^0.10.1",
     "node-storage": "^0.0.9",
     "pm2": "5.2.0",
+    "vue": "^3.2.45",
     "xterm": "^5.1.0"
   },
+  "debug": {
+    "env": {
+      "VITE_DEV_SERVER_URL": "http://localhost:3344"
+    }
+  },
   "scripts": {
-    "start": "electron-forge start",
-    "ls": "pm2 ls",
-    "stop": "pm2 stop all",
-    "package": "electron-forge package",
-    "package:win": "electron-forge package --arch x64 --platform win32",
-    "make:win": "electron-forge make --arch x64 --platform win32",
-    "make": "electron-forge make"
+    "dev": "vite",
+    "build": "vite build"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.67",
-    "@electron-forge/maker-deb": "^6.0.0-beta.67",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.67",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.67",
-    "@electron-forge/maker-zip": "^6.0.0-beta.67",
+    "@vitejs/plugin-vue": "^4.0.0",
     "electron": "^21.1.0",
-    "vite": "^4.0.3"
-  },
-  "config": {
-    "forge": {
-      "packagerConfig": {
-        "icon": "./asserts/icon"
-      },
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "projects-launcher"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {
-            "options": {
-              "icon": "./asserts/icon.png"
-            }
-          }
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ]
-    }
+    "electron-builder": "^23.6.0",
+    "vite": "^4.0.3",
+    "vite-plugin-electron": "^0.11.1",
+    "vite-plugin-electron-renderer": "^0.11.3"
   }
 }

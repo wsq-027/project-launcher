@@ -1,4 +1,4 @@
-const { ElMessage: message } = ElementPlus
+import { ElMessage as message } from 'element-plus'
 
 export async function api(channel, data) {
   try {

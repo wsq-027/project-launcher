@@ -4,3 +4,4 @@ package-lock.json
 .DS_Store
 .projects-storage.json
 out/
+dist-electron/

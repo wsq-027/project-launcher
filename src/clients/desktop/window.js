@@ -16,7 +16,11 @@ function createWindow(winId) {
     },
   })
 
-  win.loadFile(path.join(__dirname, `../../views/${winId}/index.html`))
+  if (process.env.VITE_DEV_SERVER_URL) {
+    win.loadURL(process.env.VITE_DEV_SERVER_URL)
+  } else {
+    win.loadFile(path.join(process.env.DIST, `/views/${winId}/index.html`))
+  }
 
   clearSchedule()
 }

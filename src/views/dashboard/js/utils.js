@@ -1,4 +1,4 @@
-const { watch } = Vue
+import { watch } from 'vue'
 
 export function gradient(p, rgb_beginning, rgb_end) {
   var w = (p / 100) * 2 - 1;
