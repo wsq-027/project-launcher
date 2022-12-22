@@ -1,4 +1,4 @@
-const { ipcMain, dialog, shell, BrowserWindow } = require('electron')
+const { ipcMain, dialog, shell, BrowserWindow, app } = require('electron')
 const p = require('path')
 const { createSchedule } = require('./schedule')
 
@@ -25,6 +25,10 @@ function regist(method, url, action) {
   })
 }
 
+/**
+ * @typedef {import('../../core')} Core
+ * @param {Core} core
+ */
 function initIPC(core) {
   regist('PUT', '/dashboard/project', async (event, data) => {
     return await core.addProject(data)
@@ -148,6 +152,14 @@ function initIPC(core) {
     }
 
     shell.openPath(query.filename)
+  })
+
+  regist('GET', '/dashboard/project/port', () => {
+    return core.port
+  })
+
+  regist('PUT', '/dashboard/project/port', (event, query) => {
+    core.updatePort(query.port)
   })
 }
 

@@ -6,12 +6,57 @@ import {api, apiStream} from './api.js'
 const {
   createApp,
   ref,
+  computed,
   readonly,
   onMounted,
   nextTick,
 } = Vue
 const { ElMessage: message, ElMessageBox: box } = ElementPlus
 const { FolderAdd, DocumentAdd } = ElementPlusIconsVue
+
+function useCommon() {
+  let port = ref(0)
+  const serverLink = computed(() => `127.0.0.1:${port.value}`)
+
+  async function initPort() {
+    port.value = await api('/dashboard/project/port', {
+      method: 'GET'
+    })
+  }
+
+  onMounted(initPort)
+
+  async function updatePort() {
+    const prompt = await box.prompt('请输入新的端口号')
+    console.log('update', prompt)
+
+    if (prompt.action != 'confirm') {
+      return
+    }
+
+    if (prompt.value === port.value) {
+      return
+    }
+
+    const confirm = await box.confirm('修改端口后会重启代理服务器')
+
+    if (confirm != 'confirm') {
+      return
+    }
+
+    await api('/dashboard/project/port', {
+      method: 'PUT',
+      data: {port: prompt.value}
+    })
+
+    initPort()
+  }
+
+  return {
+    serverLink,
+    updatePort,
+  }
+}
 
 function useProjectList() {
   /** 初始化 */
@@ -245,6 +290,7 @@ function useProxyLog() {
 
 const app = createApp({
   setup() {
+    const commonModule = useCommon()
     const listModule = useProjectList()
     const newModule = useNewProject(listModule)
     const detailModule = useDetail()
@@ -257,6 +303,7 @@ const app = createApp({
     }
 
     return {
+      ...commonModule,
       ...listModule,
       ...newModule,
       ...detailModule,

@@ -18,8 +18,14 @@
   <div id="app">
     <el-container>
       <el-header>
-        <el-button @click="onAddProject">新增</el-button>
-        <el-button @click="proxyLogVisible = true">查看代理日志</el-button>
+        <div>
+          启动地址：<a :href="serverLink">{{serverLink}}</a>
+        </div>
+        <div>
+          <el-button @click="updatePort">修改端口</el-button>
+          <el-button @click="onAddProject">新增</el-button>
+          <el-button @click="proxyLogVisible = true">查看代理日志</el-button>
+        </div>
       </el-header>
 
       <el-main>

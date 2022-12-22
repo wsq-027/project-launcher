@@ -5,14 +5,6 @@ const ProxyServer = require('./proxy-server')
 const ProjectStore = require('./project-store')
 const { getUserPath } = require('./common')
 
-function tryGet(fn, defaultValue) {
-  try {
-    return fn()
-  } catch (e) {
-    return defaultValue
-  }
-}
-
 class TaskReady extends Emitter {
   constructor() {
     super()
@@ -37,13 +29,28 @@ class Core extends Emitter {
     this.ps = new ProxyServer
     this.store = new ProjectStore
     this.initTask = new TaskReady()
+    /**
+     * @type {Number?}
+     */
+    this.port = null
+    /**
+     * @typedef {import('http').Server} Server
+     * @type {Server?}
+     */
+    this.server = null
   }
 
   init() {
-    const port = tryGet(() => fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}).toString(), 3335)
-    const server = this.ps.start(port)
+    let port = 3335
+    try {
+      port = parseInt(fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}).toString())
+    } catch (e) {}
+
+    const server = this.server = this.ps.start(port)
 
     server.addListener('error', (err) => this.emit('error', err))
+
+    this.port = port
 
     this.initTask.addAsyncTask(async () => {
       const list = await this.pm.listProcess()
@@ -165,6 +172,13 @@ class Core extends Emitter {
     console.log('remove all project')
 
     this.pm.disconnect()
+  }
+
+  updatePort(port) {
+    console.log('update port', port)
+    fs.writeFileSync(getUserPath() + '/port', port.toString(), { encoding: 'utf-8', flag: 'w' })
+    this.server.close()
+    this.init()
   }
 }
 
