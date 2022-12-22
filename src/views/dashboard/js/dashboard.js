@@ -151,7 +151,13 @@ function useNewProject({ getProjectList }) {
       return
     }
 
-    await api('project.add', newProject.value)
+    const data = newProject.value
+
+    await api('project.add', {
+      ...data,
+      script: data.isLocal ? data.script : '',
+      dir: data.isLocal ? data.dir : '',
+    })
 
     message.success('添加项目成功')
 
