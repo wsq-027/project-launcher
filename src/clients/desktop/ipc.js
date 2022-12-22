@@ -1,11 +1,27 @@
-const { ipcMain, dialog, shell, BrowserWindow, app } = require('electron')
+const { ipcMain, dialog, shell, BrowserWindow } = require('electron')
+const Emitter = require('events')
 const p = require('path')
 const { createSchedule } = require('./schedule')
 
-function regist(method, url, action) {
-  ipcMain.handle(method.toUpperCase() + ':' + url, async (event, data) => {
+/**
+ * @typedef {import('electron').IpcMainInvokeEvent} IpcMainInvokeEvent
+ *
+ * @callback ChannelListener
+ * @param {IpcMainInvokeEvent} event
+ * @param  {*} data
+ * @returns {*}
+ */
+
+/**
+ *
+ * @param {String} channel
+ * @param {ChannelListener} listener
+ */
+function regist(channel, listener) {
+  ipcMain.handle(channel, async (event, data) => {
     try {
-      const result = await action(event, data)
+      console.log(`[channel] ${channel} [data] ${JSON.stringify(data)}`)
+      const result = await listener(event, data)
 
       return {
         success: true,
@@ -26,38 +42,100 @@ function regist(method, url, action) {
 }
 
 /**
+ * @typedef {Object} DuplexContext
+ * @property {(closeListener: () => void) => void} onClose
+ * @property {() => void} doClose
+ * @property {(resp: *) => void} reply
+ * @property {IpcMainInvokeEvent} event
+ *
+ * @callback ContextCallback
+ * @param {DuplexContext} context
+ * @param {Object} data
+ * @returns {*}
+ */
+
+const duplex = new Emitter()
+
+/**
+ * @param {String} channel
+ * @param {ContextCallback} fn
+ */
+function registDuplex(channel, fn) {
+  duplex.on('duplex.start', async (event, data) => {
+    if (data.channel != channel) return
+
+    const { timestamp } = data
+    let _closeListener
+    /**
+     * @type {DuplexContext}
+     */
+    const context = {
+      doClose: () => {
+        event.sender.send('duplex.close', {
+          channel,
+          timestamp,
+        })
+      },
+      onClose: (closeListener) => _closeListener = closeListener,
+      reply: (resp) => {
+        event.sender.send('duplex.reply', {
+          channel,
+          timestamp,
+          data: resp,
+        })
+      },
+      event,
+    }
+
+    const closeHandler =  (_event, _data) => {
+      if (_data.channel == channel && _data.timestamp == timestamp) {
+        _closeListener()
+        duplex.off('duplex.close', closeHandler)
+      }
+    }
+
+    duplex.on('duplex.close', closeHandler)
+
+    return fn(context, data.params)
+  })
+}
+
+regist('duplex.start', (...arg) => duplex.emit('duplex.start', ...arg))
+regist('duplex.close', (...arg) => duplex.emit('duplex.close', ...arg))
+
+/**
  * @typedef {import('../../core')} Core
  * @param {Core} core
  */
 function initIPC(core) {
-  regist('PUT', '/dashboard/project', async (event, data) => {
+  regist('project.add', async (event, data) => {
     return await core.addProject(data)
   })
 
-  regist('DELETE', '/dashboard/project', async (event, query) => {
+  regist('project.delete', async (event, query) => {
     await core.removeProject({
       name: query.name,
     })
   })
 
-  regist('GET', '/dashboard/project/start', async (event, query) => {
+  regist('project.start', async (event, query) => {
     await core.startProject({
       name: query.name,
     })
   })
 
-  regist('GET', '/dashboard/project/stop', async (event, query) => {
+  regist('project.stop', async (event, query) => {
     await core.stopProject({
       name: query.name,
     })
   })
 
-  regist('GET', '/dashboard/project/all', async (event) => {
+  regist('project.all', async (event) => {
     const list = await core.listProject()
     return list
   })
 
-  regist('GET', '/dashboard/project/select-directory', async (event, query) => {
+  regist('common.select-directory', async (event, query) => {
     const res = await dialog.showOpenDialog(BrowserWindow.getAllWindows()[0], {
       title: query.title || '选择目录',
       properties: [
@@ -72,7 +150,7 @@ function initIPC(core) {
     }
   })
 
-  regist('GET', '/dashboard/project/select-file', async (event, query) => {
+  regist('common.select-file', async (event, query) => {
     const res = await dialog.showOpenDialog(BrowserWindow.getAllWindows()[0], {
       title: query.title || '选择文件',
       defaultPath: query.dir,
@@ -95,52 +173,7 @@ function initIPC(core) {
     }
   })
 
-  // stream
-  regist('GET', '/dashboard/project/detail', (event, query) => {
-    const replyUrl = '/dashboard/project/detail'
-    const schedule = createSchedule({
-      idPrefix: replyUrl + '?id=',
-      async callback() {
-        const data = await core.detailProject({ name: query.name })
-        event.sender.send('REPLY:' + schedule.id, data)
-      },
-      delay: 2000
-    })
-
-    ipcMain.handleOnce('CLOSE:' + schedule.id, schedule.stop)
-    schedule.start()
-
-    return schedule.id
-  })
-
-  regist('GET', '/dashboard/project/proxy-log', (event, query) => {
-    const id = String(new Date)
-    const replyUrl = '/dashbaord/project/proxy-log?id=' + id
-
-    const logListener = (logData) => {
-      event.sender.send('REPLY:' + replyUrl, { type: 'log', data: logData})
-    }
-    const responseListener = (resData) => {
-      event.sender.send('REPLY:' + replyUrl, { type: 'response', data: resData })
-    }
-    const errorListener = (error) => {
-      event.sender.send('REPLY:' + replyUrl, { type: 'error', data: error})
-    }
-
-    core.ps.logs.on('log', logListener)
-    core.ps.logs.on('response', responseListener)
-    core.ps.logs.on('error', errorListener)
-
-    ipcMain.handleOnce('CLOSE:' + replyUrl, () => {
-      core.ps.logs.off('log', logListener)
-      core.ps.logs.off('response', responseListener)
-      core.ps.logs.off('error', errorListener)
-    })
-
-    return replyUrl
-  })
-
-  regist('GET', '/dashboard/project/view-file', (event, query) => {
+  regist('common.view-file', (event, query) => {
     if (process.platform === 'darwin') {
       const win = BrowserWindow.getAllWindows()[0]
 
@@ -154,11 +187,46 @@ function initIPC(core) {
     shell.openPath(query.filename)
   })
 
-  regist('GET', '/dashboard/project/port', () => {
+  registDuplex('project.detail', (context, query) => {
+    const schedule = createSchedule({
+      async callback() {
+        const data = await core.detailProject({ name: query.name })
+        context.reply(data)
+      },
+      delay: 2000
+    })
+
+    context.onClose(schedule.stop)
+    schedule.start()
+  })
+
+  registDuplex('project.proxy-log', (context, data) => {
+    const logListener = (logData) => {
+      context.reply({ type: 'log', data: logData})
+    }
+    const responseListener = (resData) => {
+      context.reply({ type: 'response', data: resData })
+    }
+    const errorListener = (error) => {
+      context.reply({ type: 'error', data: error})
+    }
+
+    core.ps.logs.on('log', logListener)
+    core.ps.logs.on('response', responseListener)
+    core.ps.logs.on('error', errorListener)
+
+    context.onClose(() => {
+      core.ps.logs.off('log', logListener)
+      core.ps.logs.off('response', responseListener)
+      core.ps.logs.off('error', errorListener)
+    })
+  })
+
+  regist('port.get', () => {
     return core.port
   })
 
-  regist('PUT', '/dashboard/project/port', (event, query) => {
+  regist('port.update', (event, query) => {
     core.updatePort(query.port)
   })
 }

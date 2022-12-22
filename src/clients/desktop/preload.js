@@ -4,15 +4,10 @@ const debug = true
 const info = (...arg) => debug && console.info(...arg)
 
 contextBridge.exposeInMainWorld('projectApi', {
-  invoke: async ({ method, url, data }) => {
-    const action = method + ':' + url
-    info('[invoke]', action, data)
+  invoke: async (channel, params) => {
+    info('[invoke]', channel, params)
 
-    if (!url.startsWith('/dashboard/project')) {
-      throw new Error('invalid action ' + action)
-    }
-
-    const res = await ipcRenderer.invoke(action, data)
+    const res = await ipcRenderer.invoke(channel, params)
     info('[invoke return]', res)
     if (res.success) {
       return res.data
@@ -20,22 +15,35 @@ contextBridge.exposeInMainWorld('projectApi', {
 
     throw res
   },
-  listen: ({ url, data, callback, error }) => {
-    const action = 'GET:' + url
-    info('[listen]', url)
+  duplex: (channel, params, { callback, error } = {}) => {
+    const timestamp = Date.now()
+    info('[duplex]', channel, params)
 
-    if (!url.startsWith('/dashboard/project')) {
-      throw new Error('invalid action ' + action)
+    const reply = ipcRenderer.invoke(`duplex.start`, {
+      channel,
+      timestamp,
+      params,
+    })
+
+    function createListener(cb) {
+      return (event, data) => {
+        if (data.channel === channel && data.timestamp === timestamp) {
+          info('[duplex reply]', channel, data)
+          cb(data.data)
+        }
+      }
     }
 
-    const reply = ipcRenderer.invoke(action, data)
+    const callbackListener = createListener(callback)
+    const closeListener = createListener(() => {
+      ipcRenderer.off('duplex.reply', callbackListener)
+      ipcRenderer.off('duplex.close', closeListener)
+    })
 
     reply.then((res) => {
       if (res.success) {
-        ipcRenderer.on('REPLY:' + res.data, (event, arg) => {
-          info('[listen reply]', url, arg)
-          callback(arg)
-        })
+        ipcRenderer.on(`duplex.reply`, callbackListener)
+        ipcRenderer.on('duplex.close', closeListener)
       } else {
         error(res)
       }
@@ -44,15 +52,23 @@ contextBridge.exposeInMainWorld('projectApi', {
     function close() {
       reply.then((res) => {
         if (res.success) {
-          info('[listen close]', url)
-          ipcRenderer.invoke('CLOSE:' + res.data)
+          info('[listen close]', channel)
+          ipcRenderer.invoke(`duplex.close`, {
+            channel,
+            timestamp,
+          })
         } else {
           error(res)
         }
       })
     }
 
-    window.addEventListener('beforeunload', close)
+    window.addEventListener('beforeunload', () => {
+      close()
+      ipcRenderer.off('duplex.start')
+      ipcRenderer.off('duplex.reply')
+      ipcRenderer.off('duplex.close')
+    })
 
     return close
   }

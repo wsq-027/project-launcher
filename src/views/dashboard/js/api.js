@@ -1,21 +1,21 @@
 const { ElMessage: message } = ElementPlus
 
-export async function api(url, { data, method = 'GET', params = {}} = {}) {
+export async function api(channel, data) {
   try {
-    return await window.projectApi.invoke({method, url, data: { ...data, ...params }})
+    return await window.projectApi.invoke(channel, data)
   } catch (e) {
     message.error(e.message)
     throw e
   }
 }
 
-export function apiStream(url, { params = {}, callback } = {}) {
+export function apiStream(channel, params = {}, callback) {
   const onError = (err) => {
     message.error(err.message)
   }
 
   try {
-    return window.projectApi.listen({ url, data: params, callback, error: onError})
+    return window.projectApi.duplex(channel, params, {callback, error: onError})
   } catch (e) {
     message.error(e.message)
     throw e

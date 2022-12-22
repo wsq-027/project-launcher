@@ -19,9 +19,7 @@ function useCommon() {
   const serverLink = computed(() => `127.0.0.1:${port.value}`)
 
   async function initPort() {
-    port.value = await api('/dashboard/project/port', {
-      method: 'GET'
-    })
+    port.value = await api('port.get')
   }
 
   onMounted(initPort)
@@ -44,12 +42,11 @@ function useCommon() {
       return
     }
 
-    await api('/dashboard/project/port', {
-      method: 'PUT',
-      data: {port: prompt.value}
-    })
+    await api('port.update', {port: prompt.value})
 
     initPort()
+
+    message.success('端口修改成功')
   }
 
   return {
@@ -63,18 +60,14 @@ function useProjectList() {
   const projectList = ref([])
 
   async function getProjectList() {
-    projectList.value = await api('/dashboard/project/all', {
-      method: 'GET',
-    })
+    projectList.value = await api('project.all')
   }
 
   onMounted(getProjectList)
 
   /** 列表操作 */
   async function startProject(project) {
-    await api('/dashboard/project/start', {
-      params: { name: project.name }
-    })
+    await api('project.start', { name: project.name })
 
     message.success('启动成功')
 
@@ -82,9 +75,7 @@ function useProjectList() {
   }
 
   async function stopProject(project) {
-    await api('/dashboard/project/stop', {
-      params: { name: project.name }
-    })
+    await api('project.stop', { name: project.name })
 
     message.success('关闭成功')
 
@@ -108,10 +99,7 @@ function useProjectList() {
   async function removeProject(project) {
     await box.confirm('确定要删除该项目？')
 
-    await api('/dashboard/project', {
-      method: 'DELETE',
-      params: { name: project.name }
-    })
+    await api('project.delete', { name: project.name })
 
     message.success('删除成功')
 
@@ -163,10 +151,7 @@ function useNewProject({ getProjectList }) {
       return
     }
 
-    await api('/dashboard/project', {
-      method: 'PUT',
-      data: newProject.value
-    })
+    await api('project.add', newProject.value)
 
     message.success('添加项目成功')
 
@@ -185,7 +170,7 @@ function useNewProject({ getProjectList }) {
   }
 
   async function onDirectory() {
-    const res = await api('/dashboard/project/select-directory')
+    const res = await api('common.select-directory')
 
     if (res.success) {
       newProject.value.dir = res.directory
@@ -193,10 +178,8 @@ function useNewProject({ getProjectList }) {
   }
 
   async function onScriptFile() {
-    const res = await api('/dashboard/project/select-file', {
-      params: {
-        dir: newProject.value.dir
-      }
+    const res = await api('common.select-file', {
+      dir: newProject.value.dir
     })
 
     if (res.success) {
@@ -230,27 +213,22 @@ function useDetail() {
   function showProcessDetail(project) {
     processDetailVisible.value = true
 
-    autoClose(processDetailVisible, apiStream('/dashboard/project/detail', {
-      params: {name: project.name},
-      callback(data) {
-        processDetail.value = data
-      }
+    autoClose(processDetailVisible, apiStream('project.detail',
+    {name: project.name},
+    (data) => {
+      processDetail.value = data
     }))
   }
 
   function showProcessLog() {
-    api('/dashboard/project/view-file', {
-      params: {
-        filename: processDetail.value.pm2_env.pm_out_log_path,
-      }
+    api('common.view-file', {
+      filename: processDetail.value.pm2_env.pm_out_log_path,
     })
   }
 
   function showProcessError() {
-    api('/dashboard/project/view-file', {
-      params: {
-        filename: processDetail.value.pm2_env.pm_err_log_path,
-      }
+    api('common.view-file', {
+      filename: processDetail.value.pm2_env.pm_err_log_path,
     })
   }
 
@@ -268,7 +246,7 @@ function useProxyLog() {
   const proxyLogVisible = ref(false)
 
   onMounted(() => {
-    apiStream('/dashboard/project/proxy-log', {
+    apiStream('project.proxy-log', {}, {
       callback(logData) {
         proxyLogs.value.push(logData)
 
