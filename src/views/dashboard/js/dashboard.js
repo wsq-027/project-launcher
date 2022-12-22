@@ -2,6 +2,8 @@ import {autoClose, gradient} from './utils.js'
 import {DEFAULT_PROJECT} from './constants.js'
 
 import {api, apiStream} from './api.js'
+// TODO
+import * as xterm from '../../../../node_modules/xterm/lib/xterm.js'
 
 const {
   createApp,
@@ -14,7 +16,7 @@ const {
 const { ElMessage: message, ElMessageBox: box } = ElementPlus
 const { FolderAdd, DocumentAdd } = ElementPlusIconsVue
 
-function useCommon() {
+function usePort() {
   let port = ref(0)
   const serverLink = computed(() => `127.0.0.1:${port.value}`)
 
@@ -52,6 +54,30 @@ function useCommon() {
   return {
     serverLink,
     updatePort,
+  }
+}
+
+function useMonit() {
+  window.xterm = xterm
+  const term = new xterm.Terminal()
+  const monitVisible = ref(false)
+  console.log('monit', xterm)
+
+  async function showMonit() {
+    monitVisible.value = true
+
+    await nextTick()
+
+    term.open(document.getElementById('monit'))
+
+    autoClose(monitVisible, apiStream('project.monit', {}, (data) => {
+      term.write(data)
+    }))
+  }
+
+  return {
+    monitVisible,
+    showMonit,
   }
 }
 
@@ -274,7 +300,8 @@ function useProxyLog() {
 
 const app = createApp({
   setup() {
-    const commonModule = useCommon()
+    const portModule = usePort()
+    const monitModule = useMonit()
     const listModule = useProjectList()
     const newModule = useNewProject(listModule)
     const detailModule = useDetail()
@@ -287,7 +314,8 @@ const app = createApp({
     }
 
     return {
-      ...commonModule,
+      ...portModule,
+      ...monitModule,
       ...listModule,
       ...newModule,
       ...detailModule,

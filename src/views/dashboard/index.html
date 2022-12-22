@@ -24,6 +24,7 @@
         <div>
           <el-button @click="updatePort">修改端口</el-button>
           <el-button @click="onAddProject">新增</el-button>
+          <el-button @click="showMonit">进程监控器</el-button>
           <el-button @click="proxyLogVisible = true">查看代理日志</el-button>
         </div>
       </el-header>
@@ -223,6 +224,10 @@
       </ul>
 
       <el-empty v-else/>
+    </el-dialog>
+
+    <el-dialog v-model="monitVisible" title="进程监控器" fullscreen align-center>
+      <div id="monit"></div>
     </el-dialog>
   </div>
 

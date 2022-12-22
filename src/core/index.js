@@ -3,6 +3,7 @@ const fs = require('fs')
 const ProcessManager = require('./process-manager')
 const ProxyServer = require('./proxy-server')
 const ProjectStore = require('./project-store')
+const Monit = require('./monit')
 const { getUserPath } = require('./common')
 
 class TaskReady extends Emitter {
@@ -29,6 +30,7 @@ class Core extends Emitter {
     this.ps = new ProxyServer
     this.store = new ProjectStore
     this.initTask = new TaskReady()
+    this.monit = new Monit()
     /**
      * @type {Number?}
      */
@@ -175,10 +177,16 @@ class Core extends Emitter {
   }
 
   updatePort(port) {
-    console.log('update port', port)
+    console.log('update port to', port)
     fs.writeFileSync(getUserPath() + '/port', port.toString(), { encoding: 'utf-8', flag: 'w' })
     this.server.close()
     this.init()
+  }
+
+  openMonit() {
+    this.monit.open()
+
+    return this.monit
   }
 }
 

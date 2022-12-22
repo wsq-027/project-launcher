@@ -222,6 +222,16 @@ function initIPC(core) {
     })
   })
 
+  registDuplex('project.monit', (context) => {
+    const monit = core.openMonit()
+
+    monit.on('data', (data) => context.reply(data))
+
+    context.onClose(() => {
+      monit.exit()
+    })
+  })
+
   regist('port.get', () => {
     return core.port
   })
