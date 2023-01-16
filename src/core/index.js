@@ -43,6 +43,11 @@ class Core extends Emitter {
   }
 
   init() {
+    // 避免重复初始化
+    if (this.server) {
+      return
+    }
+
     let port = 3335
     try {
       port = parseInt(fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}).toString())
