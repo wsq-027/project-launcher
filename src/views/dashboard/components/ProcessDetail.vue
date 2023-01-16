@@ -2,10 +2,6 @@
   <el-dialog  v-model="processDetailVisible" title="进程详情" :close-on-click-modal="false" :width="640">
     <template v-if="processDetail.pm2_env">
       <el-descriptions :title="processDetail.pm2_env.name" :column="3">
-        <template #extra>
-          <el-button @click="showProcessLog">查看日志</el-button>
-          <el-button @click="showProcessError">查看异常日志</el-button>
-        </template>
         <el-descriptions-item label="Process Id:">
           [{{ processDetail.pm2_env.pm_id }}]
         </el-descriptions-item>
@@ -111,24 +107,10 @@ export default {
       }))
     }
 
-    function showProcessLog() {
-      api('common.view-file', {
-        filename: processDetail.value.pm2_env.pm_out_log_path,
-      })
-    }
-
-    function showProcessError() {
-      api('common.view-file', {
-        filename: processDetail.value.pm2_env.pm_err_log_path,
-      })
-    }
-
     return {
       processDetail,
       processDetailVisible,
       showProcessDetail,
-      showProcessLog,
-      showProcessError,
       gradient,
     }
   }
