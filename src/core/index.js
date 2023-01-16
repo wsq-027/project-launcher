@@ -183,8 +183,8 @@ class Core extends Emitter {
     this.init()
   }
 
-  openMonit() {
-    this.monit.open()
+  openMonit(options) {
+    this.monit.open(options)
 
     return this.monit
   }

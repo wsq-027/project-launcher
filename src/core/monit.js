@@ -36,7 +36,10 @@ class DataBatcher extends Emitter {
     this.data += this.decoder.write(chunk)
 
     if (!this.timeout) {
-      this.timeout = setTimeout(() => this.flush(), BATCH_DURATION_MS)
+      this.timeout = setTimeout(() => {
+        this.timeout = null
+        this.flush()
+      }, BATCH_DURATION_MS)
     }
   }
 
@@ -57,12 +60,17 @@ module.exports = class Monit extends Emitter{
     this.ended = false
 
     this.batcher.on('flush', (data) => {
+      console.log('[monit] flush data')
       this.emit('data', data)
     })
   }
 
-  open() {
-    this.pty = nodePty.spawn('npx', ['pm2', 'monit'])
+  open({ rows, cols }) {
+    this.pty = nodePty.spawn('npx', ['pm2', 'monit'], {
+      rows,
+      cols,
+    })
+    this.ended = false
 
     this.pty.onData((chunk) => {
       if (this.ended) {
@@ -73,12 +81,17 @@ module.exports = class Monit extends Emitter{
     })
 
     this.pty.onExit((e) => {
+      console.log('[monit] exit', e)
       this.ended = true
       this.emit('exit')
     })
+
+    console.log('[monit] start')
   }
 
   write(data) {
+    console.log('[monit] input', data)
+
     if (this.pty) {
       this.pty.write(data)
     }
@@ -86,7 +99,7 @@ module.exports = class Monit extends Emitter{
 
   exit() {
     if (this.pty) {
-      this.pty.kill
+      this.pty.kill()
     }
 
     this.emit('exit')

@@ -14,6 +14,7 @@ function createWindow(winId) {
     webPreferences: {
       preload: path.join(__dirname, './preload.js')
     },
+    resizable: false,
   })
 
   if (process.env.VITE_DEV_SERVER_URL) {

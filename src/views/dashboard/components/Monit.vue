@@ -1,5 +1,11 @@
 <template>
-  <el-dialog v-model="monitVisible" title="进程监控器" fullscreen align-center>
+  <el-dialog
+    v-model="monitVisible"
+    title="进程监控器"
+    custom-class="monit-dialog"
+    fullscreen
+    align-center
+  >
     <div id="monit"></div>
   </el-dialog>
 </template>
@@ -8,29 +14,53 @@
 import * as xterm from 'xterm'
 import 'xterm/css/xterm.css'
 import {autoClose} from '../js/utils.js'
-import {apiStream} from '../js/api.js'
+import {api, apiStream} from '../js/api.js'
 
 import {
   ref,
   nextTick,
 } from 'vue'
 
+/**
+ * @param {Function[]} fns
+ */
+function flow(fns) {
+  return (arg) => fns.reduce((pre, fn) => fn.call(this, pre), arg)
+}
+
 export default {
   setup() {
-    const term = new xterm.Terminal()
     const monitVisible = ref(false)
-    console.log('monit', xterm)
 
     async function showMonit() {
       monitVisible.value = true
 
       await nextTick()
 
-      term.open(document.getElementById('monit'))
+      const el = document.getElementById('monit')
+      const rect = el.getBoundingClientRect()
+      const rows = Math.floor(rect.height / 18)
+      const cols = Math.floor(rect.width / 9)
+      const term = new xterm.Terminal({
+        windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].includes(navigator.platform),
+        cols,
+        rows,
+      })
+      term.open(el)
+      term.onData((data) => {
+        api('monit.data', data)
+      })
 
-      autoClose(monitVisible, apiStream('project.monit', {}, (data) => {
-        term.write(data)
-      }))
+      term.attachCustomKeyEventHandler((e) => !e.catched)
+
+      autoClose(monitVisible, flow([
+        apiStream('monit', { rows, cols }, (data) => {
+          term.write(data)
+        }),
+        () => {
+          term.dispose()
+        }
+      ]))
     }
 
     return {
@@ -42,5 +72,16 @@ export default {
 </script>
 
 <style>
+.monit-dialog {
+  display: flex;
+  flex-direction: column;
+}
 
+.monit-dialog .el-dialog__body {
+  flex: 1;
+  min-height: 0;
+}
+#monit {
+  height: 100%;
+}
 </style>

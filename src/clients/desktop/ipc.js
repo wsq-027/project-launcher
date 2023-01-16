@@ -222,14 +222,22 @@ function initIPC(core) {
     })
   })
 
-  registDuplex('project.monit', (context) => {
-    const monit = core.openMonit()
+  registDuplex('monit', (context, query) => {
+    const monit = core.openMonit(query)
 
     monit.on('data', (data) => context.reply(data))
+    monit.on('close', () => {
+      context.doClose()
+    })
 
     context.onClose(() => {
       monit.exit()
     })
+  })
+
+  regist('monit.data', (event, data) => {
+    const monit = core.monit
+    monit.write(data)
   })
 
   regist('port.get', () => {
