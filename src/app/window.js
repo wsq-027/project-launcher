@@ -1,5 +1,5 @@
 const path = require('path')
-const { BrowserWindow } = require('electron')
+const { BrowserWindow, dialog } = require('electron')
 const { clearSchedule } = require('./schedule')
 
 /**
@@ -18,9 +18,10 @@ function createWindow(winId) {
   })
 
   if (process.env.VITE_DEV_SERVER_URL) {
-    win.loadURL(process.env.VITE_DEV_SERVER_URL)
+    win.loadURL(`${process.env.VITE_DEV_SERVER_URL}`)
   } else {
-    win.loadFile(path.join(process.env.DIST, `/views/${winId}/index.html`))
+    const viewPath = path.join(__dirname, `../views/index.html`)
+    win.loadFile(viewPath)
   }
 
   clearSchedule()

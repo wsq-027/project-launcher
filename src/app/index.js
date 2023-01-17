@@ -1,10 +1,13 @@
 const { app, dialog, Menu } = require('electron')
-const BaseClient = require('../base')
 const { initIPC } = require('./ipc')
 const { createWindow, activeAllWindow } = require('./window')
 const { initTray } = require('./tray')
 
-module.exports = class DesktopClient extends BaseClient {
+module.exports = class DesktopClient {
+  constructor(core) {
+    this.core = core
+  }
+
   start() {
     const instanceLock = app.requestSingleInstanceLock()
 

@@ -1,6 +1,7 @@
 const { StringDecoder } = require('string_decoder')
 const nodePty = require('node-pty')
-const Emitter = require('events')
+const Emitter = require('events');
+const path = require('path');
 
 // Max duration to batch session data before sending it to the renderer process.
 const BATCH_DURATION_MS = 16;
@@ -66,9 +67,11 @@ module.exports = class Monit extends Emitter{
   }
 
   open({ rows, cols }) {
-    this.pty = nodePty.spawn('npx', ['pm2', 'monit'], {
+    console.log('path', path.join(__dirname, '../../node_modules/pm2/bin'))
+    this.pty = nodePty.spawn('pm2', ['monit'], {
       rows,
       cols,
+      cwd: path.join(__dirname, '../../node_modules/pm2/bin'),
     })
     this.ended = false
 

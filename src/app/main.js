@@ -1,5 +1,5 @@
-const Core = require('./src/core')
-const Client = require('./src/clients/desktop/index')
+const Core = require('../core')
+const Client = require('./index')
 
 function main() {
   const core = new Core

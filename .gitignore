@@ -5,3 +5,5 @@ package-lock.json
 .projects-storage.json
 out/
 dist-electron/
+dist/
+release/
