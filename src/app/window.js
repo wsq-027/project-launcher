@@ -1,5 +1,5 @@
 const path = require('path')
-const { BrowserWindow, dialog } = require('electron')
+const { BrowserWindow } = require('electron')
 const { clearSchedule } = require('./schedule')
 
 /**

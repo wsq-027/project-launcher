@@ -1,7 +1,8 @@
 const { StringDecoder } = require('string_decoder')
 const nodePty = require('node-pty')
-const Emitter = require('events');
-const path = require('path');
+const Emitter = require('events')
+const { app } = require('electron');
+const shellEnv = require('shell-env');
 
 // Max duration to batch session data before sending it to the renderer process.
 const BATCH_DURATION_MS = 16;
@@ -66,12 +67,15 @@ module.exports = class Monit extends Emitter{
     })
   }
 
-  open({ rows, cols }) {
-    console.log('path', path.join(__dirname, '../../node_modules/pm2/bin'))
-    this.pty = nodePty.spawn('pm2', ['monit'], {
+  async open({ rows, cols }) {
+    const cwd = (app.isPackaged ? process.resourcesPath + '/app.asar.unpacked' : app.getAppPath()) + '/node_modules/pm2/bin'
+    const env = app.isPackaged ? await shellEnv() : process.env
+    this.pty = nodePty.spawn('./pm2', ['monit'], {
+    // this.pty = nodePty.spawn('node', ['--version'], {
       rows,
       cols,
-      cwd: path.join(__dirname, '../../node_modules/pm2/bin'),
+      cwd,
+      env,
     })
     this.ended = false
 
@@ -90,6 +94,10 @@ module.exports = class Monit extends Emitter{
     })
 
     console.log('[monit] start')
+  }
+
+  async _getEnv() {
+    return shellEnv()
   }
 
   write(data) {
