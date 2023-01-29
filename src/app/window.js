@@ -15,6 +15,7 @@ function createWindow(winId) {
       preload: path.join(__dirname, './preload.js')
     },
     resizable: false,
+    fullscreenable: false,
   })
 
   if (process.env.VITE_DEV_SERVER_URL) {

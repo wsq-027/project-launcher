@@ -104,7 +104,7 @@ regist('duplex.start', (...arg) => duplex.emit('duplex.start', ...arg))
 regist('duplex.close', (...arg) => duplex.emit('duplex.close', ...arg))
 
 /**
- * @typedef {import('../../core')} Core
+ * @typedef {import('../core')} Core
  * @param {Core} core
  */
 function initIPC(core) {
@@ -241,7 +241,7 @@ function initIPC(core) {
   })
 
   regist('port.get', () => {
-    return core.port
+    return core.getPort()
   })
 
   regist('port.update', (event, query) => {

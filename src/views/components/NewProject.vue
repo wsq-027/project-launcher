@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="newProjectVisible" title="新增" :close-on-click-modal="false" :width="480" align-center>
+  <el-dialog v-model="newProjectVisible" :title="title" :close-on-click-modal="false" :width="480" align-center>
     <el-form ref="newProjectForm" :model="newProject" label-width="120px">
       <el-form-item label="项目标识" prop="name" required>
         <el-input v-model="newProject.name">
@@ -51,119 +51,123 @@
 
     <template #footer>
       <el-button @click="cancelAddProject">取消</el-button>
-      <el-button type="primary" @click="submitAddProject">新增</el-button>
+      <el-button type="primary" @click="submitAddProject">{{title}}</el-button>
     </template>
   </el-dialog>
 </template>
 
-<script>
+<script setup>
 import {DEFAULT_PROJECT} from '../js/constants.js'
 import {api} from '../js/api.js'
-import { ref, readonly } from 'vue'
+import { ref, readonly, computed } from 'vue'
 import { ElMessage as message } from 'element-plus'
-import { FolderAdd, DocumentAdd } from '@element-plus/icons-vue'
 
-export default {
-  emits: ['submit'],
-  components: {
-    FolderAdd,
-    DocumentAdd,
-  },
-  setup(props, ctx) {
-    /** 新增弹窗 */
-    const newProjectVisible = ref(false)
-    const newProject = ref({
-      name: '',
-      script: '',
-      dir: '',
-      urlPrefix: '',
-      proxyHost: '',
-      isLocal: false,
-    })
+const defaultProject = readonly(DEFAULT_PROJECT)
+const emit = defineEmits(['submit'])
 
-    const newProjectForm = ref()
+/** 新增弹窗 */
+const newProjectVisible = ref(false)
+const newProject = ref({
+  name: '',
+  script: '',
+  dir: '',
+  urlPrefix: '',
+  proxyHost: '',
+  isLocal: false,
+})
+const isEdit = ref(false)
+const title = computed(() => isEdit.value ? '编辑' : '新增')
 
-    function onAddProject() {
-      newProjectVisible.value = true
-      newProject.value = {
-        name: '',
-        script: '',
-        dir: '',
-        urlPrefix: '/',
-        proxyHost: 'http://',
-        isLocal: false,
-      }
+const newProjectForm = ref()
+
+function addProject() {
+  isEdit.value = false
+  newProjectVisible.value = true
+  newProject.value = {
+    name: '',
+    script: '',
+    dir: '',
+    urlPrefix: '/',
+    proxyHost: 'http://',
+    isLocal: false,
+  }
+}
+
+function editProject(project) {
+  isEdit.value = true
+  newProjectVisible.value = true
+  newProject.value = {
+    ...project,
+  }
+}
+
+function cancelAddProject(){
+  newProjectVisible.value = false
+}
+
+async function submitAddProject(){
+  if (!await newProjectForm.value.validate()) {
+    return
+  }
+
+  const data = newProject.value
+
+  if (isEdit.value) {
+    await api('project.delete', { name: data.name })
+  } else {
+    if (!data.script) {
+      data.script = './bin/www'
     }
+  }
 
-    function cancelAddProject(){
-      newProjectVisible.value = false
-    }
+  await api('project.add', {
+    ...data,
+    script: data.isLocal ? data.script : '',
+    dir: data.isLocal ? data.dir : '',
+  })
 
-    async function submitAddProject(){
-      if (!await newProjectForm.value.validate()) {
-        return
-      }
+  message.success(`${title}项目成功`)
 
-      const data = newProject.value
+  cancelAddProject()
+  emit('submit')
+}
 
-      await api('project.add', {
-        ...data,
-        script: data.isLocal ? data.script : '',
-        dir: data.isLocal ? data.dir : '',
-      })
+function setDefaultProject(name) {
+  const project = DEFAULT_PROJECT.find((proj) => proj.name === name)
 
-      message.success('添加项目成功')
+  if (!project) {
+    return
+  }
 
-      cancelAddProject()
-      ctx.emit('submit')
-    }
+  newProject.value = project
+}
 
-    function setDefaultProject(name) {
-      const project = DEFAULT_PROJECT.find((proj) => proj.name === name)
+async function onDirectory() {
+  const res = await api('common.select-directory')
 
-      if (!project) {
-        return
-      }
+  if (res.success) {
+    newProject.value.dir = res.directory
+  }
+}
 
-      newProject.value = project
-    }
+async function onScriptFile() {
+  const res = await api('common.select-file', {
+    dir: newProject.value.dir
+  })
 
-    async function onDirectory() {
-      const res = await api('common.select-directory')
+  if (res.success) {
+    newProject.value.script = res.relativePath || res.path
 
-      if (res.success) {
-        newProject.value.dir = res.directory
-      }
-    }
-
-    async function onScriptFile() {
-      const res = await api('common.select-file', {
-        dir: newProject.value.dir
-      })
-
-      if (res.success) {
-        newProject.value.script = res.relativePath || res.path
-
-        if (!newProject.value.dir) {
-          newProject.value.dir = res.path.substring(0, res.path.lastIndexOf('/'))
-        }
-      }
-    }
-
-    return {
-      defaultProject: readonly(DEFAULT_PROJECT),
-      newProjectVisible,
-      newProjectForm,
-      newProject,
-      onAddProject,
-      cancelAddProject,
-      submitAddProject,
-      setDefaultProject,
-      onDirectory,
-      onScriptFile,
+    if (!newProject.value.dir) {
+      newProject.value.dir = res.path.substring(0, res.path.lastIndexOf('/'))
     }
   }
 }
+
+defineExpose({
+  addProject,
+  editProject,
+})
 </script>
 
 <style>

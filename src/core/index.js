@@ -5,6 +5,7 @@ const ProxyServer = require('./proxy-server')
 const ProjectStore = require('./project-store')
 const Monit = require('./monit')
 const { getUserPath } = require('./common')
+const Storage = require('node-storage')
 
 class TaskReady extends Emitter {
   constructor() {
@@ -31,10 +32,8 @@ class Core extends Emitter {
     this.store = new ProjectStore
     this.initTask = new TaskReady()
     this.monit = new Monit()
-    /**
-     * @type {Number?}
-     */
-    this.port = null
+    this.configStorage = new Storage(getUserPath() + '/config.json')
+
     /**
      * @typedef {import('http').Server} Server
      * @type {Server?}
@@ -48,16 +47,9 @@ class Core extends Emitter {
       return
     }
 
-    let port = 3335
-    try {
-      port = parseInt(fs.readFileSync(getUserPath() + '/port', { encoding: 'utf-8', flag: 'r'}).toString())
-    } catch (e) {}
-
-    const server = this.server = this.ps.start(port)
+    const server = this.server = this.ps.start(this.getPort())
 
     server.addListener('error', (err) => this.emit('error', err))
-
-    this.port = port
 
     this.initTask.addAsyncTask(async () => {
       const list = await this.pm.listProcess()
@@ -76,10 +68,6 @@ class Core extends Emitter {
 
   async addProject({ name, dir, urlPrefix, proxyHost, isLocal, script }) {
     await this.initTask.ready()
-
-    if (!script) {
-      script = './bin/www'
-    }
 
     const data = {
       name,
@@ -181,9 +169,13 @@ class Core extends Emitter {
     this.pm.disconnect()
   }
 
+  getPort() {
+    return this.configStorage.get('port') || 3335
+  }
+
   updatePort(port) {
     console.log('update port to', port)
-    fs.writeFileSync(getUserPath() + '/port', port.toString(), { encoding: 'utf-8', flag: 'w' })
+    this.configStorage.put('port', port)
     this.server.close()
     this.init()
   }

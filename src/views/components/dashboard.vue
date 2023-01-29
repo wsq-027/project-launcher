@@ -6,7 +6,7 @@
       </div>
       <div>
         <el-button @click="updatePort">修改端口</el-button>
-        <el-button @click="onAddProject">新增</el-button>
+        <el-button @click="addProject">新增</el-button>
         <el-button @click="showMonit">进程监控器</el-button>
         <el-button @click="showProxyLog">查看代理日志</el-button>
       </div>
@@ -14,8 +14,8 @@
 
     <el-main>
       <el-table border :data="projectList">
-        <el-table-column label="项目标识" prop="name"></el-table-column>
-        <el-table-column label="url前缀" prop="urlPrefix"></el-table-column>
+        <el-table-column label="项目标识" prop="name" width="90"></el-table-column>
+        <el-table-column label="url前缀" prop="urlPrefix" width="90"></el-table-column>
         <el-table-column label="代理目标host" prop="proxyHost" :min-width="220">
           <template #default="{row }">
             <el-tag v-if="row.isLocal" effect="dark" type="danger" size="small">local</el-tag>
@@ -23,17 +23,27 @@
             <span style="margin-left: 5px;">{{ row.proxyHost }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="node执行文件" prop="script" :width="130"></el-table-column>
-        <el-table-column label="项目所在路径" prop="dir" :min-width="180"></el-table-column>
+        <el-table-column label="node执行文件" prop="script" :width="130">
+          <template #default="{row}">
+            <span v-if="!row.isLocal" class="info-msg">remote</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="项目所在路径" prop="dir" :min-width="180">
+          <template #default="{row}">
+            <span v-if="!row.isLocal" class="info-msg">remote</span>
+          </template>
+        </el-table-column>
         <el-table-column label="运行" :width="70" align="center">
           <template #default="{ row }">
             <el-switch :value="row.isStart" :before-change="() => switchProject(row)" :loading="row._loading" />
           </template>
         </el-table-column>
-        <el-table-column label="操作" :width="120">
+        <el-table-column label="操作" :width="160">
           <template #default="{ row }">
+            <el-button v-if="!row.isStart" @click="editProject(row)">编辑</el-button>
             <el-button v-if="!row.isStart" @click="removeProject(row)">删除</el-button>
             <el-button v-if="row.isLocal && row.isStart" @click="showProcessDetail(row)">查看进程</el-button>
+            <span class="info-msg" v-if="!row.isLocal && row.isStart">项目运行中不可修改</span>
           </template>
         </el-table-column>
       </el-table>
@@ -46,8 +56,7 @@
   <monit ref="monitDialog" />
 </template>
 
-<script>
-import {gradient} from '../js/utils.js'
+<script setup>
 import {api} from '../js/api.js'
 import {
   ref,
@@ -60,161 +69,129 @@ import NewProject from './NewProject.vue'
 import ProcessDetail from './ProcessDetail.vue'
 import ProxyLog from './ProxyLog.vue'
 
-function useDialog() {
-  const addDialog = ref(null)
-  const detailDialog = ref(null)
-  const monitDialog = ref(null)
-  const proxyLogDialog = ref(null)
-
-  function onAddProject() {
-    addDialog.value.onAddProject()
-  }
-
-  function showProcessDetail(row) {
-    detailDialog.value.showProcessDetail(row)
-  }
-
-  function showMonit() {
-    monitDialog.value.showMonit()
-  }
-
-  function showProxyLog() {
-    proxyLogDialog.value.proxyLogVisible = true
-  }
-
-  return {
-    addDialog,
-    detailDialog,
-    monitDialog,
-    proxyLogDialog,
-    onAddProject,
-    showProcessDetail,
-    showMonit,
-    showProxyLog,
-  }
+/** 添加 */
+const addDialog = ref(null)
+function addProject() {
+  addDialog.value.addProject()
 }
 
-function usePort() {
-  let port = ref(0)
-  const serverLink = computed(() => `127.0.0.1:${port.value}`)
-
-  async function initPort() {
-    port.value = await api('port.get')
-  }
-
-  onMounted(initPort)
-
-  async function updatePort() {
-    const prompt = await box.prompt('请输入新的端口号')
-    console.log('update', prompt)
-
-    if (prompt.action != 'confirm') {
-      return
-    }
-
-    if (prompt.value === port.value) {
-      return
-    }
-
-    const confirm = await box.confirm('修改端口后会重启代理服务器')
-
-    if (confirm != 'confirm') {
-      return
-    }
-
-    await api('port.update', {port: prompt.value})
-
-    initPort()
-
-    message.success('端口修改成功')
-  }
-
-  return {
-    serverLink,
-    updatePort,
-  }
+/** 查看 */
+const detailDialog = ref(null)
+function showProcessDetail(row) {
+  detailDialog.value.showProcessDetail(row)
 }
 
-function useProjectList() {
-  /** 初始化 */
-  const projectList = ref([])
+/** 进程监控 */
+const monitDialog = ref(null)
+function showMonit() {
+  monitDialog.value.showMonit()
+}
 
-  async function getProjectList() {
-    projectList.value = await api('project.all')
-  }
+/** 代理日志 */
+const proxyLogDialog = ref(null)
+function showProxyLog() {
+  proxyLogDialog.value.proxyLogVisible = true
+}
 
-  onMounted(getProjectList)
+/** 修改端口 */
+let port = ref(0)
+const serverLink = computed(() => `127.0.0.1:${port.value}`)
 
-  /** 列表操作 */
-  async function startProject(project) {
-    await api('project.start', { name: project.name })
+async function initPort() {
+  port.value = await api('port.get')
+}
 
-    message.success('启动成功')
+onMounted(initPort)
 
-    await getProjectList()
-  }
-
-  async function stopProject(project) {
-    await api('project.stop', { name: project.name })
-
-    message.success('关闭成功')
-
-    await getProjectList()
-  }
-
-  async function switchProject(project) {
-    project._loading = true
-
-    try {
-      if (project.isStart) {
-        stopProject(project)
-      } else {
-        startProject(project)
+async function updatePort() {
+  const prompt = await box.prompt('请输入新的端口号', {
+    inputPlaceholder: port.value,
+    inputType: 'number',
+    inputValidator: (value) => {
+      if (value > 65535 || value < 0) {
+        return '非法端口'
       }
-    } finally {
-      project._loading = false
+
+      return true
     }
+  })
+
+  if (prompt.action != 'confirm') {
+    return
   }
 
-  async function removeProject(project) {
-    await box.confirm('确定要删除该项目？')
-
-    await api('project.delete', { name: project.name })
-
-    message.success('删除成功')
-
-    await getProjectList()
+  if (prompt.value === port.value) {
+    return
   }
 
-  return {
-    projectList,
-    getProjectList,
-    startProject,
-    stopProject,
-    switchProject,
-    removeProject,
+  const confirm = await box.confirm('修改端口后会重启代理服务器')
+
+  if (confirm != 'confirm') {
+    return
+  }
+
+  await api('port.update', {port: prompt.value})
+
+  initPort()
+
+  message.success('端口修改成功')
+}
+
+/** 列表 */
+const projectList = ref([])
+async function getProjectList() {
+  projectList.value = await api('project.all')
+}
+
+onMounted(getProjectList)
+
+/** 启动 */
+async function startProject(project) {
+  await api('project.start', { name: project.name })
+
+  message.success('启动成功')
+
+  await getProjectList()
+}
+
+/** 停止 */
+async function stopProject(project) {
+  await api('project.stop', { name: project.name })
+
+  message.success('关闭成功')
+
+  await getProjectList()
+}
+
+/** 切换按钮 */
+async function switchProject(project) {
+  project._loading = true
+
+  try {
+    if (project.isStart) {
+      stopProject(project)
+    } else {
+      startProject(project)
+    }
+  } finally {
+    project._loading = false
   }
 }
 
-export default {
-  components: {
-    Monit,
-    NewProject,
-    ProcessDetail,
-    ProxyLog,
-  },
-  setup() {
-    const portModule = usePort()
-    const listModule = useProjectList()
-    const dialogModule = useDialog()
+/** 删除 */
+async function removeProject(project) {
+  await box.confirm('确定要删除该项目？')
 
-    return {
-      ...portModule,
-      ...listModule,
-      ...dialogModule,
-      gradient,
-    }
-  },
+  await api('project.delete', { name: project.name })
+
+  message.success('删除成功')
+
+  await getProjectList()
+}
+
+/** 修改 */
+async function editProject(project) {
+  addDialog.value.editProject(project)
 }
 </script>
 
@@ -278,5 +255,10 @@ body {
   margin: 0;
   padding: 1px;
   list-style: none;
+}
+
+.info-msg {
+  color: var(--el-color-info-light-5);
+  font-size: 12px;
 }
 </style>

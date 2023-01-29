@@ -2,7 +2,7 @@
   <el-dialog
     v-model="monitVisible"
     title="进程监控器"
-    custom-class="monit-dialog"
+    class="monit-dialog"
     fullscreen
     align-center
   >

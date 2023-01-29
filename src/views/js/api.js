@@ -1,6 +1,6 @@
 import { ElMessage as message } from 'element-plus'
 
-export async function api(channel, data) {
+export async function api(channel, data = {}) {
   try {
     return await window.projectApi.invoke(channel, data)
   } catch (e) {
