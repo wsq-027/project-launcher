@@ -23,43 +23,41 @@
   </el-dialog>
 </template>
 
-<script>
+<script setup>
 import {apiStream} from '../js/api.js'
 import { ref, onMounted, nextTick } from 'vue'
 
-export default {
-  setup() {
-    const proxyLogs = ref([])
-    const proxyLogVisible = ref(false)
+const proxyLogs = ref([])
+const proxyLogVisible = ref(false)
 
-    const filterDate = (timestamp) => {
-      const date = new Date(timestamp)
+const filterDate = (timestamp) => {
+  const date = new Date(timestamp)
 
-      return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`
-    }
-
-    onMounted(() => {
-      apiStream('project.proxy-log', {}, {
-        callback(logData) {
-          proxyLogs.value.push(logData)
-
-          nextTick(() => {
-            const el = document.getElementById('proxy-log')
-            el?.scrollTo({
-              top: el?.scrollHeight,
-            })
-          })
-        }
-      })
-    })
-
-    return {
-      proxyLogs,
-      proxyLogVisible,
-      filterDate,
-    }
-  }
+  return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`
 }
+
+onMounted(() => {
+  apiStream('project.proxy-log', {}, {
+    callback(logData) {
+      proxyLogs.value.push(logData)
+
+      nextTick(() => {
+        const el = document.getElementById('proxy-log')
+        el?.scrollTo({
+          top: el?.scrollHeight,
+        })
+      })
+    }
+  })
+})
+
+function showProxy() {
+  proxyLogVisible.value = true
+}
+
+defineExpose({
+  showProxy,
+})
 </script>
 
 <style>

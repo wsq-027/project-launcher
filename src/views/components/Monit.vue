@@ -10,7 +10,7 @@
   </el-dialog>
 </template>
 
-<script>
+<script setup>
 import * as xterm from 'xterm'
 import 'xterm/css/xterm.css'
 import {autoClose} from '../js/utils.js'
@@ -28,47 +28,42 @@ function flow(fns) {
   return (arg) => fns.reduce((pre, fn) => fn.call(this, pre), arg)
 }
 
-export default {
-  setup() {
-    const monitVisible = ref(false)
+const monitVisible = ref(false)
 
-    async function showMonit() {
-      monitVisible.value = true
+async function showMonit() {
+  monitVisible.value = true
 
-      await nextTick()
+  await nextTick()
 
-      const el = document.getElementById('monit')
-      const rect = el.getBoundingClientRect()
-      const rows = Math.floor(rect.height / 18)
-      const cols = Math.floor(rect.width / 9)
-      const term = new xterm.Terminal({
-        windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].includes(navigator.platform),
-        cols,
-        rows,
-      })
-      term.open(el)
-      term.onData((data) => {
-        api('monit.data', data)
-      })
+  const el = document.getElementById('monit')
+  const rect = el.getBoundingClientRect()
+  const rows = Math.floor(rect.height / 18)
+  const cols = Math.floor(rect.width / 9)
+  const term = new xterm.Terminal({
+    windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].includes(navigator.platform),
+    cols,
+    rows,
+  })
+  term.open(el)
+  term.onData((data) => {
+    api('monit.data', data)
+  })
 
-      term.attachCustomKeyEventHandler((e) => !e.catched)
+  term.attachCustomKeyEventHandler((e) => !e.catched)
 
-      autoClose(monitVisible, flow([
-        apiStream('monit', { rows, cols }, (data) => {
-          term.write(data)
-        }),
-        () => {
-          term.dispose()
-        }
-      ]))
+  autoClose(monitVisible, flow([
+    apiStream('monit', { rows, cols }, (data) => {
+      term.write(data)
+    }),
+    () => {
+      term.dispose()
     }
-
-    return {
-      monitVisible,
-      showMonit,
-    }
-  }
+  ]))
 }
+
+defineExpose({
+  showMonit,
+})
 </script>
 
 <style>

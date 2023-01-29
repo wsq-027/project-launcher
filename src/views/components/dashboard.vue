@@ -90,7 +90,7 @@ function showMonit() {
 /** 代理日志 */
 const proxyLogDialog = ref(null)
 function showProxyLog() {
-  proxyLogDialog.value.proxyLogVisible = true
+  proxyLogDialog.value.showProxy()
 }
 
 /** 修改端口 */

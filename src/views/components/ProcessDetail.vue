@@ -85,36 +85,31 @@
   </el-dialog>
 </template>
 
-<script>
+<script setup>
 import {autoClose} from '../js/utils.js'
 import {api, apiStream} from '../js/api.js'
 import {gradient} from '../js/utils.js'
 import { ref } from 'vue'
 
-export default {
-  setup() {
-    /** 详情弹窗 */
-    const processDetail = ref({})
-    const processDetailVisible = ref(false)
+/** 详情弹窗 */
+const processDetail = ref({})
+const processDetailVisible = ref(false)
 
-    function showProcessDetail(project) {
-      processDetailVisible.value = true
+function showProcessDetail(project) {
+  processDetailVisible.value = true
 
-      autoClose(processDetailVisible, apiStream('project.detail',
-      {name: project.name},
-      (data) => {
-        processDetail.value = data
-      }))
+  autoClose(processDetailVisible, apiStream(
+    'project.detail',
+    { name: project.name },
+    (data) => {
+      processDetail.value = data
     }
-
-    return {
-      processDetail,
-      processDetailVisible,
-      showProcessDetail,
-      gradient,
-    }
-  }
+  ))
 }
+
+defineExpose({
+  showProcessDetail,
+})
 </script>
 
 <style>

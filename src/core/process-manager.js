@@ -45,6 +45,7 @@ module.exports = class ProcessManager {
 
     return proc
   }
+
   async removeProcess(projectName) {
     await this.connect()
 
