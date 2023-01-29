@@ -54,11 +54,12 @@ class Core extends Emitter {
     this.initTask.addAsyncTask(async () => {
       const list = await this.pm.listProcess()
 
-      for (const { name } of list) {
+      for (const { name, pm2_env: { pm_id } } of list) {
         if (this.store.has(name)) {
           const project = this.store.get(name)
           project.isStart = true
           project.isLocal = true
+          project.id = pm_id
 
           this.store.update(name, project)
         }
@@ -77,6 +78,7 @@ class Core extends Emitter {
       isLocal,
       script,
       isStart: false,
+      id: undefined,
     }
 
     this.store.add(data)
@@ -94,7 +96,8 @@ class Core extends Emitter {
     }
 
     if (project.isLocal) {
-      await this.pm.addProcess(project.name, project.dir, project.script)
+      const proc = await this.pm.addProcess(project.name, project.dir, project.script)
+      project.id = proc[0].pm2_env.pm_id
     }
 
     this.ps.addProxy(project.urlPrefix, project.proxyHost)
@@ -119,6 +122,7 @@ class Core extends Emitter {
     this.ps.removeProxy(project.urlPrefix)
 
     project.isStart = false
+    project.id = null
     this.store.update(name, project)
   }
 

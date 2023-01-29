@@ -20,6 +20,7 @@ import {
   ref,
   nextTick,
 } from 'vue'
+import { ElMessage } from 'element-plus'
 
 /**
  * @param {Function[]} fns
@@ -30,7 +31,12 @@ function flow(fns) {
 
 const monitVisible = ref(false)
 
-async function showMonit() {
+async function showMonit(project, canInput) {
+  if (project.id == null) {
+    ElMessage.warning('找不到日志')
+    return
+  }
+
   monitVisible.value = true
 
   await nextTick()
@@ -45,14 +51,21 @@ async function showMonit() {
     rows,
   })
   term.open(el)
-  term.onData((data) => {
-    api('monit.data', data)
-  })
+
+  if (canInput) {
+    term.onData((data) => {
+      api('monit.data', data)
+    })
+
+    setTimeout(() => {
+      term.focus()
+    }, 1000)
+  }
 
   term.attachCustomKeyEventHandler((e) => !e.catched)
 
   autoClose(monitVisible, flow([
-    apiStream('monit', { rows, cols }, (data) => {
+    apiStream('monit', { rows, cols, args: ['logs', project.id, '--raw'] }, (data) => {
       term.write(data)
     }),
     () => {

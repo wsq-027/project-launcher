@@ -67,10 +67,10 @@ module.exports = class Monit extends Emitter{
     })
   }
 
-  async open({ rows, cols }) {
+  async open({ rows, cols, args }) {
     const cwd = (app.isPackaged ? process.resourcesPath + '/app.asar.unpacked' : app.getAppPath()) + '/node_modules/pm2/bin'
     const env = app.isPackaged ? await shellEnv() : process.env
-    this.pty = nodePty.spawn('./pm2', ['monit'], {
+    this.pty = nodePty.spawn('./pm2', args, {
     // this.pty = nodePty.spawn('node', ['--version'], {
       rows,
       cols,

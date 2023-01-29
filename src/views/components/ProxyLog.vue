@@ -37,17 +37,15 @@ const filterDate = (timestamp) => {
 }
 
 onMounted(() => {
-  apiStream('project.proxy-log', {}, {
-    callback(logData) {
-      proxyLogs.value.push(logData)
+  apiStream('project.proxy-log', {}, (logData) => {
+    proxyLogs.value.push(logData)
 
-      nextTick(() => {
-        const el = document.getElementById('proxy-log')
-        el?.scrollTo({
-          top: el?.scrollHeight,
-        })
+    nextTick(() => {
+      const el = document.getElementById('proxy-log')
+      el?.scrollTo({
+        top: el?.scrollHeight,
       })
-    }
+    })
   })
 })
 

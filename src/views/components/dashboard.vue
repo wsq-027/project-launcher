@@ -7,7 +7,7 @@
       <div>
         <el-button @click="updatePort">修改端口</el-button>
         <el-button @click="addProject">新增</el-button>
-        <el-button @click="showMonit">进程监控器</el-button>
+        <!-- <el-button @click="showMonit">进程监控器</el-button> -->
         <el-button @click="showProxyLog">查看代理日志</el-button>
       </div>
     </el-header>
@@ -35,14 +35,15 @@
         </el-table-column>
         <el-table-column label="运行" :width="70" align="center">
           <template #default="{ row }">
-            <el-switch :value="row.isStart" :before-change="() => switchProject(row)" :loading="row._loading" />
+            <el-switch :model-value="row.isStart" :before-change="() => switchProject(row)" :loading="row._loading" />
           </template>
         </el-table-column>
         <el-table-column label="操作" :width="160">
           <template #default="{ row }">
             <el-button v-if="!row.isStart" @click="editProject(row)">编辑</el-button>
             <el-button v-if="!row.isStart" @click="removeProject(row)">删除</el-button>
-            <el-button v-if="row.isLocal && row.isStart" @click="showProcessDetail(row)">查看进程</el-button>
+            <el-button v-if="row.isLocal && row.isStart" @click="showProcessDetail(row)">进程</el-button>
+            <el-button v-if="row.isLocal && row.isStart && row.id != null" @click="showMonit(row)">日志</el-button>
             <span class="info-msg" v-if="!row.isLocal && row.isStart">项目运行中不可修改</span>
           </template>
         </el-table-column>
@@ -83,8 +84,8 @@ function showProcessDetail(row) {
 
 /** 进程监控 */
 const monitDialog = ref(null)
-function showMonit() {
-  monitDialog.value.showMonit()
+function showMonit(project) {
+  monitDialog.value.showMonit(project)
 }
 
 /** 代理日志 */
