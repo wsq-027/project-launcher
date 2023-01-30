@@ -2,7 +2,7 @@
   <el-container>
     <el-header>
       <div>
-        启动地址：<a :href="serverLink">{{serverLink}}</a>
+        启动地址：<a href="javascript:;">{{serverLink}}</a>
       </div>
       <div>
         <el-button @click="updatePort">修改端口</el-button>
@@ -259,6 +259,8 @@ body {
 }
 
 .info-msg {
+  user-select: none;
+  cursor: not-allowed;
   color: var(--el-color-info-light-5);
   font-size: 12px;
 }
