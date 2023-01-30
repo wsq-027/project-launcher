@@ -119,10 +119,6 @@ module.exports = class Session extends Emitter{
     console.log('[session] start', command, args)
   }
 
-  async _getEnv() {
-    return shellEnv()
-  }
-
   write(data) {
     console.log('[session] input', data)
 

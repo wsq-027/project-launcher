@@ -2,6 +2,7 @@ const path = require('path')
 const Session = require('./session')
 const EventEmitter = require('events')
 
+const CATCH_MAX_SIZE = 1024 * 1024 * 4
 
 function resolvePathFromAbsoluteToRelateive(dir) {
   return path.relative(process.cwd(), dir.replace('~', process.env.HOME || process.env.USERPROFILE))
@@ -13,9 +14,16 @@ class LogsCache extends EventEmitter {
     this.data = ''
   }
 
+  get fullData() {
+    return this.data
+  }
+
   addData(data) {
     this.data += data
-    this.emit('data', data, this.data)
+    if (this.data.length > CATCH_MAX_SIZE) {
+      this.data = this.data.substring(this.data.length - CATCH_MAX_SIZE, this.data.length)
+    }
+    this.emit('data', data)
   }
 
   onData(cb) {
@@ -46,7 +54,7 @@ module.exports = class ProcessManager {
     const session = new Session()
     const [command, ...args] = projectScript.split(' ')
     await session.open(command, args, {
-      // TODO
+      // TODO 窗口尺寸
       rows: 400 / 18,
       cols: 1000 / 9,
       cwd: resolvePathFromAbsoluteToRelateive(projectDir),

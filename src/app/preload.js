@@ -49,7 +49,17 @@ contextBridge.exposeInMainWorld('projectApi', {
       }
     })
 
+    function beforeUnload() {
+      close()
+      ipcRenderer.off('duplex.start')
+      ipcRenderer.off('duplex.reply')
+      ipcRenderer.off('duplex.close')
+    }
+    window.addEventListener('beforeunload', beforeUnload)
+
     function close() {
+      window.removeEventListener('beforeunload', beforeUnload)
+
       reply.then((res) => {
         if (res.success) {
           info('[listen close]', channel)
@@ -62,13 +72,6 @@ contextBridge.exposeInMainWorld('projectApi', {
         }
       })
     }
-
-    window.addEventListener('beforeunload', () => {
-      close()
-      ipcRenderer.off('duplex.start')
-      ipcRenderer.off('duplex.reply')
-      ipcRenderer.off('duplex.close')
-    })
 
     return close
   }

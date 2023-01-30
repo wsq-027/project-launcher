@@ -57,16 +57,9 @@ async function showMonit(project) {
 
   term.attachCustomKeyEventHandler((e) => !e.catched)
 
-  let isFirstStream = true
   autoClose(monitVisible, flow([
-    apiStream('project.log', {name: project.name}, ({data, fullData}) => {
-      console.log('data', isFirstStream)
-      if (isFirstStream) {
-        term.write(fullData)
-        isFirstStream = false
-      } else {
-        term.write(data)
-      }
+    apiStream('project.log', {name: project.name}, (data) => {
+      term.write(data)
     }),
     () => {
       term.dispose()

@@ -226,8 +226,8 @@ function initIPC(core) {
 
   registDuplex('project.log', (context, data) => {
     const { logsCache, session } = core.getProject(data)
-    const onData = (data, fullData) => {
-      context.reply({data, fullData})
+    const onData = (data) => {
+      context.reply(data)
     }
 
     session.once('exit', () => {
@@ -241,7 +241,7 @@ function initIPC(core) {
     })
 
     setTimeout(() => {
-      onData('', logsCache.data) // 立刻返回
+      onData(logsCache.fullData) // 初始数据
     })
   })
 

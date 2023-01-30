@@ -214,50 +214,6 @@ body {
   overflow: auto;
 }
 
-.proxy-log-item {
-  font-size: 12px;
-  box-shadow: 0 0 6px 0 #d5d5d5;
-  padding: 10px 20px;
-  margin-top: 10px;
-}
-
-.log-time {
-  color: gray;
-  font-size: 12px;
-  margin-right: 10rpx;
-}
-.log-time::before {
-  content: '--';
-}
-.log-time::after {
-  content: '--';
-}
-
-.log-name,
-.log-target,
-.log-response,
-.log-error {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 5px;
-}
-
-.log-response,
-.log-error {
-  white-space: normal;
-}
-
-.proxy-log {
-  height: calc(100vh - 54px - 30px * 2);
-  overflow: auto;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 1px;
-  list-style: none;
-}
-
 .info-msg {
   user-select: none;
   cursor: not-allowed;
