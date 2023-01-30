@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="monitVisible"
-    title="进程监控器"
+    title="进程监控"
     class="monit-dialog"
     fullscreen
     align-center
@@ -31,12 +31,7 @@ function flow(fns) {
 
 const monitVisible = ref(false)
 
-async function showMonit(project, canInput) {
-  if (project.id == null) {
-    ElMessage.warning('找不到日志')
-    return
-  }
-
+async function showMonit(project) {
   monitVisible.value = true
 
   await nextTick()
@@ -52,21 +47,26 @@ async function showMonit(project, canInput) {
   })
   term.open(el)
 
-  if (canInput) {
-    term.onData((data) => {
-      api('monit.data', data)
-    })
+  //   term.onData((data) => {
+  //     api('session.data', data)
+  //   })
 
-    setTimeout(() => {
-      term.focus()
-    }, 1000)
-  }
+  //   setTimeout(() => {
+  //     term.focus()
+  //   }, 1000)
 
   term.attachCustomKeyEventHandler((e) => !e.catched)
 
+  let isFirstStream = true
   autoClose(monitVisible, flow([
-    apiStream('monit', { rows, cols, args: ['logs', project.id, '--raw'] }, (data) => {
-      term.write(data)
+    apiStream('project.log', {name: project.name}, ({data, fullData}) => {
+      console.log('data', isFirstStream)
+      if (isFirstStream) {
+        term.write(fullData)
+        isFirstStream = false
+      } else {
+        term.write(data)
+      }
     }),
     () => {
       term.dispose()

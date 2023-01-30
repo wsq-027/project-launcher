@@ -1,71 +1,108 @@
-const util = require('util')
 const path = require('path')
-const pm2 = require('pm2')
-const {getUserPath} = require('./common')
+const Session = require('./session')
+const EventEmitter = require('events')
 
-const manager = {
-  connect: util.promisify(pm2.connect).bind(pm2),
-  start: util.promisify(pm2.start).bind(pm2),
-  stop: util.promisify(pm2.stop).bind(pm2),
-  delete: util.promisify(pm2.delete).bind(pm2),
-  list: util.promisify(pm2.list).bind(pm2),
-  describe: util.promisify(pm2.describe).bind(pm2),
-  disconnect: util.promisify(pm2.disconnect).bind(pm2),
-}
 
 function resolvePathFromAbsoluteToRelateive(dir) {
   return path.relative(process.cwd(), dir.replace('~', process.env.HOME || process.env.USERPROFILE))
 }
 
+class LogsCache extends EventEmitter {
+  constructor() {
+    super()
+    this.data = ''
+  }
+
+  addData(data) {
+    this.data += data
+    this.emit('data', data, this.data)
+  }
+
+  onData(cb) {
+    this.on('data', cb)
+  }
+
+  offData(cb) {
+    this.off('data', cb)
+  }
+}
+
 module.exports = class ProcessManager {
   constructor() {
-    this._hasConnect = false
+    /**
+     * @type {Map<string, {session: Session, logsCache: LogsCache, name: string}>}
+     */
+    this.processMap = new Map()
   }
 
-  async connect() {
-    if (!this._hasConnect) {
-      await manager.connect()
-
-      this._hasConnect = true
-    }
-  }
-
+  /**
+   *
+   * @param {string} projectName
+   * @param {string} projectDir
+   * @param {string} projectScript
+   * @returns
+   */
   async addProcess(projectName, projectDir, projectScript) {
-    await this.connect()
-
-    const proc = await manager.start({
-      name: projectName,
-      script: projectScript,
+    const session = new Session()
+    const [command, ...args] = projectScript.split(' ')
+    await session.open(command, args, {
+      // TODO
+      rows: 400 / 18,
+      cols: 1000 / 9,
       cwd: resolvePathFromAbsoluteToRelateive(projectDir),
-      error_file: path.join(getUserPath(), `./logs/${projectName}_error.log`),
-      out_file: path.join(getUserPath(), `./logs/${projectName}_out.log`),
-      pid_file: path.join(getUserPath(), `./logs/${projectName}.pid`),
-      exec_mode: 'cluster',
     })
 
-    return proc
+    const logsCache = new LogsCache()
+
+    session.on('data', (data) => {
+      logsCache.addData(data)
+    })
+
+    const process = {
+      name: projectName,
+      session,
+      logsCache,
+    }
+
+    this.processMap.set(projectName, process)
+
+    return process
   }
 
+  /**
+   *
+   * @param {string} projectName
+   */
   async removeProcess(projectName) {
-    await this.connect()
+    const process = this.processMap.get(projectName)
 
-    await manager.stop(projectName)
+    if (!process) {
+      return
+    }
 
-    await manager.delete(projectName)
+    await new Promise((resolve, reject) => {
+      if (process.session.ended) {
+        return resolve()
+      }
+
+      process.session.once('exit', resolve)
+      process.session.exit()
+    })
+
+    this.processMap.delete(projectName)
   }
 
-  async detailProcess(name) {
-    const procs = await manager.describe(name)
+  /**
+   *
+   * @param {string} name
+   */
+  getProcess(name) {
+    const process = this.processMap.get(name)
 
-    return procs[0]
-  }
+    if (!process) {
+      throw new Error('项目未启动')
+    }
 
-  async listProcess() {
-    return await manager.list()
-  }
-
-  disconnect() {
-    this.hasConnect = false
-    pm2.disconnect()
+    return process
   }
 }

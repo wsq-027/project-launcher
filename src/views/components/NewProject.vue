@@ -39,12 +39,8 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item label="node执行文件" prop="script" required>
-          <el-input v-model="newProject.script">
-            <template #append>
-              <el-button size="small" @click="onScriptFile" icon="DocumentAdd" title="选择文件"></el-button>
-            </template>
-          </el-input>
+        <el-form-item label="启动命令" prop="script" required>
+          <el-input v-model="newProject.script" />
         </el-form-item>
       </template>
     </el-form>

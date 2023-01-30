@@ -42,8 +42,8 @@
           <template #default="{ row }">
             <el-button v-if="!row.isStart" @click="editProject(row)">编辑</el-button>
             <el-button v-if="!row.isStart" @click="removeProject(row)">删除</el-button>
-            <el-button v-if="row.isLocal && row.isStart" @click="showProcessDetail(row)">进程</el-button>
-            <el-button v-if="row.isLocal && row.isStart && row.id != null" @click="showMonit(row)">日志</el-button>
+            <!-- <el-button v-if="row.isLocal && row.isStart" @click="showProcessDetail(row)">进程</el-button> -->
+            <el-button v-if="row.isLocal && row.isStart" @click="showMonit(row)">日志</el-button>
             <span class="info-msg" v-if="!row.isLocal && row.isStart">项目运行中不可修改</span>
           </template>
         </el-table-column>
@@ -52,7 +52,7 @@
   </el-container>
 
   <new-project ref="addDialog" @submit="getProjectList" />
-  <process-detail ref="detailDialog" />
+  <!-- <process-detail ref="detailDialog" /> -->
   <proxy-log ref="proxyLogDialog" />
   <monit ref="monitDialog" />
 </template>
@@ -170,9 +170,9 @@ async function switchProject(project) {
 
   try {
     if (project.isStart) {
-      stopProject(project)
+      await stopProject(project)
     } else {
-      startProject(project)
+      await startProject(project)
     }
   } finally {
     project._loading = false

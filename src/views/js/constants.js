@@ -1,7 +1,7 @@
 export const DEFAULT_PROJECT = [
   {
     name: 'hospital(medical)',
-    script: './bin/www',
+    script: 'npm start',
     urlPrefix: '/medical',
     proxyHost: 'http://127.0.0.1:3331',
     dir: '~/Documents/work/zoe-health-hospital',
@@ -9,7 +9,7 @@ export const DEFAULT_PROJECT = [
   },
   {
     name: 'app-pay(pay)',
-    script: './bin/www',
+    script: 'npm start',
     urlPrefix: '/pay',
     proxyHost: 'http://127.0.0.1:3334',
     dir: '~/Documents/work/zoe-health-app-pay',
@@ -17,7 +17,7 @@ export const DEFAULT_PROJECT = [
   },
   {
     name: 'app',
-    script: './bin/www',
+    script: 'npm start',
     urlPrefix: '/',
     proxyHost: 'http://127.0.0.1:3330',
     dir: '~/Documents/work/zoe-health-app',

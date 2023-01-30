@@ -71,10 +71,12 @@ function registDuplex(channel, fn) {
      */
     const context = {
       doClose: () => {
-        event.sender.send('duplex.close', {
-          channel,
-          timestamp,
-        })
+        if (!event.sender.isDestroyed()) {
+          event.sender.send('duplex.close', {
+            channel,
+            timestamp,
+          })
+        }
       },
       onClose: (closeListener) => _closeListener = closeListener,
       reply: (resp) => {
@@ -190,7 +192,7 @@ function initIPC(core) {
   registDuplex('project.detail', (context, query) => {
     const schedule = createSchedule({
       async callback() {
-        const data = await core.detailProject({ name: query.name })
+        const {session, logsCache, ...data} = await core.getProject({ name: query.name })
         context.reply(data)
       },
       delay: 2000
@@ -222,22 +224,25 @@ function initIPC(core) {
     })
   })
 
-  registDuplex('monit', (context, query) => {
-    const monit = core.openMonit(query)
+  registDuplex('project.log', (context, data) => {
+    const { logsCache, session } = core.getProject(data)
+    const onData = (data, fullData) => {
+      context.reply({data, fullData})
+    }
 
-    monit.on('data', (data) => context.reply(data))
-    monit.on('close', () => {
+    session.once('exit', () => {
       context.doClose()
     })
 
-    context.onClose(() => {
-      monit.exit()
-    })
-  })
+    logsCache.onData(onData)
 
-  regist('monit.data', (event, data) => {
-    const monit = core.monit
-    monit.write(data)
+    context.onClose(() => {
+      logsCache.offData(onData)
+    })
+
+    setTimeout(() => {
+      onData('', logsCache.data) // 立刻返回
+    })
   })
 
   regist('port.get', () => {

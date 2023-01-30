@@ -51,7 +51,7 @@ class DataBatcher extends Emitter {
   }
 }
 
-module.exports = class Monit extends Emitter{
+module.exports = class Session extends Emitter{
   constructor() {
     super()
     /**
@@ -62,15 +62,15 @@ module.exports = class Monit extends Emitter{
     this.ended = false
 
     this.batcher.on('flush', (data) => {
-      console.log('[monit] flush data')
+      console.log('[session] flush data', data.substring(0, 20))
       this.emit('data', data)
     })
   }
 
-  async open({ rows, cols, args }) {
-    const cwd = (app.isPackaged ? process.resourcesPath + '/app.asar.unpacked' : app.getAppPath()) + '/node_modules/pm2/bin'
+  async open(command, args, { rows, cols, cwd }) {
+    cwd = cwd || (app.isPackaged ? process.resourcesPath + '/app.asar.unpacked' : app.getAppPath())
     const env = app.isPackaged ? await shellEnv() : process.env
-    this.pty = nodePty.spawn('./pm2', args, {
+    this.pty = nodePty.spawn(command, args, {
     // this.pty = nodePty.spawn('node', ['--version'], {
       rows,
       cols,
@@ -78,6 +78,8 @@ module.exports = class Monit extends Emitter{
       env,
     })
     this.ended = false
+    let isExitImmediately = true
+    let errData = ''
 
     this.pty.onData((chunk) => {
       if (this.ended) {
@@ -85,15 +87,36 @@ module.exports = class Monit extends Emitter{
       }
 
       this.batcher.write(chunk)
+
+      if (isExitImmediately) {
+        errData += this.batcher.data
+      }
     })
 
+    await Promise.race([
+      new Promise(r => setTimeout(() => {
+        isExitImmediately = false
+        r()
+      }, 300)), // 等待一段时间后如果直接退出则认为是进程失败
+      new Promise((r, reject) => {
+        this.pty.onExit((e) => {
+          this.ended = true
+          if (isExitImmediately && e.exitCode != 0) {
+            const err = new Error('[session] error ' + errData)
+            console.error(err)
+            reject(err)
+          }
+        })
+      })
+    ])
+
     this.pty.onExit((e) => {
-      console.log('[monit] exit', e)
       this.ended = true
+      console.log('[session] exit', e)
       this.emit('exit')
     })
 
-    console.log('[monit] start')
+    console.log('[session] start', command, args)
   }
 
   async _getEnv() {
@@ -101,7 +124,7 @@ module.exports = class Monit extends Emitter{
   }
 
   write(data) {
-    console.log('[monit] input', data)
+    console.log('[session] input', data)
 
     if (this.pty) {
       this.pty.write(data)
@@ -112,8 +135,5 @@ module.exports = class Monit extends Emitter{
     if (this.pty) {
       this.pty.kill()
     }
-
-    this.emit('exit')
-    this.ended = true
   }
 }

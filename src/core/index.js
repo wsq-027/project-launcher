@@ -1,28 +1,9 @@
 const Emitter = require('events')
-const fs = require('fs')
 const ProcessManager = require('./process-manager')
 const ProxyServer = require('./proxy-server')
 const ProjectStore = require('./project-store')
-const Monit = require('./monit')
 const { getUserPath } = require('./common')
 const Storage = require('node-storage')
-
-class TaskReady extends Emitter {
-  constructor() {
-    super()
-    this._readyPromise = new Promise(resolve => {
-      this.once('ready', resolve)
-    })
-  }
-
-  addAsyncTask(task) {
-    this.emit('ready', task)
-  }
-
-  async ready() {
-    await this._readyPromise
-  }
-}
 
 class Core extends Emitter {
   constructor() {
@@ -30,8 +11,6 @@ class Core extends Emitter {
     this.pm = new ProcessManager
     this.ps = new ProxyServer
     this.store = new ProjectStore
-    this.initTask = new TaskReady()
-    this.monit = new Monit()
     this.configStorage = new Storage(getUserPath() + '/config.json')
 
     /**
@@ -50,26 +29,9 @@ class Core extends Emitter {
     const server = this.server = this.ps.start(this.getPort())
 
     server.addListener('error', (err) => this.emit('error', err))
-
-    this.initTask.addAsyncTask(async () => {
-      const list = await this.pm.listProcess()
-
-      for (const { name, pm2_env: { pm_id } } of list) {
-        if (this.store.has(name)) {
-          const project = this.store.get(name)
-          project.isStart = true
-          project.isLocal = true
-          project.id = pm_id
-
-          this.store.update(name, project)
-        }
-      }
-    })
   }
 
   async addProject({ name, dir, urlPrefix, proxyHost, isLocal, script }) {
-    await this.initTask.ready()
-
     const data = {
       name,
       dir,
@@ -78,7 +40,6 @@ class Core extends Emitter {
       isLocal,
       script,
       isStart: false,
-      id: undefined,
     }
 
     this.store.add(data)
@@ -87,8 +48,6 @@ class Core extends Emitter {
   }
 
   async startProject({name}) {
-    await this.initTask.ready()
-
     const project = this.store.get(name)
 
     if (project.isStart) {
@@ -96,8 +55,7 @@ class Core extends Emitter {
     }
 
     if (project.isLocal) {
-      const proc = await this.pm.addProcess(project.name, project.dir, project.script)
-      project.id = proc[0].pm2_env.pm_id
+      await this.pm.addProcess(project.name, project.dir, project.script)
     }
 
     this.ps.addProxy(project.urlPrefix, project.proxyHost)
@@ -107,8 +65,6 @@ class Core extends Emitter {
   }
 
   async stopProject({name}) {
-    await this.initTask.ready()
-
     const project = this.store.get(name)
 
     if (!project.isStart) {
@@ -122,13 +78,10 @@ class Core extends Emitter {
     this.ps.removeProxy(project.urlPrefix)
 
     project.isStart = false
-    project.id = null
     this.store.update(name, project)
   }
 
   async removeProject({name}) {
-    await this.initTask.ready()
-
     const project = this.store.get(name)
 
     if (project.isStart) {
@@ -139,14 +92,10 @@ class Core extends Emitter {
   }
 
   async listProject() {
-    await this.initTask.ready()
-
     return [...this.store]
   }
 
-  async detailProject({ name }) {
-    await this.initTask.ready()
-
+  getProject({ name }) {
     const project = this.store.get(name)
 
     if (!project.isStart) {
@@ -155,7 +104,7 @@ class Core extends Emitter {
 
     return {
       ...project,
-      ...(await this.pm.detailProcess(name)),
+      ...this.pm.getProcess(name),
     }
   }
 
@@ -164,13 +113,15 @@ class Core extends Emitter {
 
     for (const project of this.store) {
       if (project.isLocal && project.isStart) {
-        await this.pm.removeProcess(project.name)
+        try {
+          await this.pm.removeProcess(project.name)
+        } catch (e) {
+          console.error(e)
+        }
       }
     }
 
     console.log('remove all project')
-
-    this.pm.disconnect()
   }
 
   getPort() {
@@ -182,12 +133,6 @@ class Core extends Emitter {
     this.configStorage.put('port', port)
     this.server.close()
     this.init()
-  }
-
-  openMonit(options) {
-    this.monit.open(options)
-
-    return this.monit
   }
 }
 

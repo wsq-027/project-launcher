@@ -1,6 +1,6 @@
 {
   "name": "projects-launcher",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "src/app/main.js",
   "author": "wsq-027",
   "description": "Multi Projects Launcher",
@@ -11,7 +11,6 @@
     "express-http-proxy": "1.6.3",
     "node-pty": "0.10.1",
     "node-storage": "0.0.9",
-    "pm2": "5.2.0",
     "shell-env": "3.0.1",
     "vue": "3.2.45",
     "xterm": "5.1.0"

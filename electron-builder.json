@@ -1,9 +1,6 @@
 {
   "appId": "ProjectLauncher",
   "asar": true,
-  "asarUnpack": [
-    "node_modules/pm2/**/*"
-  ],
   "directories": {
     "output": "release/${version}"
   },
