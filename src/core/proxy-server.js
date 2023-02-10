@@ -108,6 +108,15 @@ module.exports = class ProxyServer {
     return 0
   }
 
+  findRoute(path) {
+    return this.app._router?.stack
+      ?.findIndex((layer) => layer.name === 'handleProxy' && RegExp(layer.regexp).test(path)) ?? -1
+  }
+
+  hasRoute(path) {
+    return this.findRoute(path) > -1
+  }
+
   addProxy(path, proxyHost) {
     this.app.use(path, this._createProxy(path, proxyHost))
     // 代理路径插入随机，但是路由请求需要按优先级排序
@@ -115,8 +124,7 @@ module.exports = class ProxyServer {
   }
 
   removeProxy(path) {
-    const index = this.app._router.stack
-    .findIndex((layer) => layer.name ==='handleProxy' && RegExp(layer.regexp).test(path))
+    const index = this.findRoute(path)
 
     if (index === -1) {
       throw new Error('no such path: ' + path + ' !')

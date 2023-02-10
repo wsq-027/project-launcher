@@ -54,6 +54,10 @@ class Core extends Emitter {
       throw new Error('不可重复启动')
     }
 
+    if (this.ps.hasRoute(project.urlPrefix)) {
+      throw new Error(`路径 ${project.urlPrefix} 被占用`)
+    }
+
     if (project.isLocal) {
       await this.pm.addProcess(project.name, project.dir, project.script)
     }
