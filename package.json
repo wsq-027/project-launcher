@@ -1,6 +1,6 @@
 {
   "name": "projects-launcher",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "src/app/main.js",
   "author": "wsq-027",
   "description": "Multi Projects Launcher",

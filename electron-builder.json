@@ -4,6 +4,7 @@
   "directories": {
     "output": "release/${version}"
   },
+  "icon": "src/assets/icon.png",
   "files": [
     "src/app",
     "src/assets",
