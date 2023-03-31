@@ -2,6 +2,15 @@ const express = require('express')
 const proxy = require('express-http-proxy')
 const Emitter = require('events')
 
+/**
+ * 计算路径的层级
+ * @param {String} path 路径
+ * @returns {Number}
+ */
+function getPathLevel(path) {
+  return path.split('/').filter(Boolean).length
+}
+
 class ProxyLogs extends Emitter {
   log({ id, target }) {
     this.emit('log', {
@@ -87,7 +96,7 @@ module.exports = class ProxyServer {
     })
 
     _proxy.path = basePath
-    _proxy.level = basePath.split('/').filter(Boolean).length
+    _proxy.level = getPathLevel(basePath)
 
     return _proxy
   }
@@ -109,8 +118,9 @@ module.exports = class ProxyServer {
   }
 
   findRoute(path) {
+    const level = getPathLevel(path)
     return this.app._router?.stack
-      ?.findIndex((layer) => layer.name === 'handleProxy' && RegExp(layer.regexp).test(path)) ?? -1
+      ?.findIndex((layer) => layer.name === 'handleProxy' && level === layer.handle.level && RegExp(layer.regexp).test(path)) ?? -1
   }
 
   hasRoute(path) {
